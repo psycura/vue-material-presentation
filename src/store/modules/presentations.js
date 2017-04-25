@@ -3,9 +3,9 @@ import * as _ from 'lodash';
 const state = {
     slideIndex          : 0,
     nextSlideIndex      : 1,
-    presentationDemos   : [],
-    currentSlides       : [],
-    currentPresentation : {}
+    presentationDemos   : null,
+    currentSlides       : null,
+    // currentPresentation : null
 };
 
 const mutations = {
@@ -13,9 +13,7 @@ const mutations = {
         state.nextSlideIndex = (argNextSlideIndex + 1) >= state.currentSlides.length ? 0 : argNextSlideIndex + 1;
         state.slideIndex     = argNextSlideIndex > state.currentSlides.length - 1 ? 0 : argNextSlideIndex;
     },
-    'SET_PRESENTATION_TEMPLATES'( state, presentationTemplates ){
-        state.presentationTemplates = presentationTemplates;
-    },
+
     'SET_PRESENTATIONS_DEMOS'( state, presentationDemos ){
         state.presentationDemos = presentationDemos;
     },
@@ -30,26 +28,26 @@ const mutations = {
         } );
         state.currentSlides = array;
     },
-    'SET_CURRENT_PRESENTATION'( state, presentation ){
-        let slidesArray = [];
-        _.forIn ( presentation.slides, ( value, key ) => {
-            slidesArray.push ( value )
-        } );
-        state.currentPresentation        = presentation;
-        state.currentPresentation.slides = slidesArray;
-    },
-    'UPDATE_PRESENTATION_NAME'( state, name ){
-        state.currentPresentation.name = name;
-    },
-    'ADD_EMPTY_SLIDE'( state, layout ){
-        let array = state.currentPresentation.slides;
-        let slide = {
-            layout,
-            id : array.length + 1
-        };
-        array.push ( slide );
-        state.currentPresentation.slides = array;
-    }
+    // 'SET_CURRENT_PRESENTATION'( state, presentation ){
+    //     let slidesArray = [];
+    //     _.forIn ( presentation.slides, ( value, key ) => {
+    //         slidesArray.push ( value )
+    //     } );
+    //     state.currentPresentation        = presentation;
+    //     state.currentPresentation.slides = slidesArray;
+    // },
+    // 'UPDATE_PRESENTATION_NAME'( state, name ){
+    //     state.currentPresentation.name = name;
+    // },
+    // 'ADD_EMPTY_SLIDE'( state, layout ){
+    //     let array = state.currentPresentation.slides;
+    //     let slide = {
+    //         layout,
+    //         id : array.length + 1
+    //     };
+    //     array.push ( slide );
+    //     state.currentPresentation.slides = array;
+    // }
 };
 
 const actions = {
@@ -71,18 +69,18 @@ const actions = {
         commit ( 'SET_PRESENTATIONS_DEMOS', demos );
     },
     
-    setCurrentPresentation : ( { commit }, presentation ) => {
-        commit ( 'SET_CURRENT_PRESENTATION', presentation );
-    },
+    // setCurrentPresentation : ( { commit }, presentation ) => {
+    //     commit ( 'SET_CURRENT_PRESENTATION', presentation );
+    // },
     
-    updatePresentationName : ( { commit }, name ) => {
-        commit ( 'UPDATE_PRESENTATION_NAME', name )
-    },
+    // updatePresentationName : ( { commit }, name ) => {
+    //     commit ( 'UPDATE_PRESENTATION_NAME', name )
+    // },
     
-    addEmptySlide : ( { commit }, layout ) => {
-        commit ( 'ADD_EMPTY_SLIDE', layout )
-        
-    }
+    // addEmptySlide : ( { commit }, layout ) => {
+    //     commit ( 'ADD_EMPTY_SLIDE', layout )
+    //
+    // }
 };
 
 const getters = {
@@ -98,9 +96,9 @@ const getters = {
     currentSlides( state ){
         return state.currentSlides;
     },
-    currentPresentation( state ){
-        return state.currentPresentation;
-    }
+    // currentPresentation( state ){
+    //     return state.currentPresentation;
+    // }
     
 };
 

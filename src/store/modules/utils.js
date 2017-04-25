@@ -1,7 +1,12 @@
 const state = {
     sideNavCollapsed : false,
-    message          : '',
+    message          : null,
     messageIsVisible : false,
+    subheader        : {
+        visible : false,
+        title   : null,
+        link    : null
+    }
 };
 
 const mutations = {
@@ -11,18 +16,24 @@ const mutations = {
     'SET_MESSAGE'( state, message ){
         state.message          = message;
         state.messageIsVisible = true;
+    },
+    'TOGGLE_SUBHEADER'( state, status ){
+        state.subheader = status;
     }
 };
 
 const actions = {
-    expandMenu : ( { commit } ) => {
+    expandMenu      : ( { commit } ) => {
         commit ( 'EXPAND_MENU' )
     },
-    setMessage : ( { commit }, message ) => {
+    setMessage      : ( { commit }, message ) => {
         return new Promise ( resolve => {
             commit ( 'SET_MESSAGE', message );
             resolve ();
         } )
+    },
+    toggleSubheader : ( { commit }, status ) => {
+        commit ( 'TOGGLE_SUBHEADER', status );
     }
 };
 
@@ -35,6 +46,9 @@ const getters = {
     },
     messageIsVisible( state ){
         return state.messageIsVisible
+    },
+    subheader( state ){
+        return state.subheader;
     }
 };
 

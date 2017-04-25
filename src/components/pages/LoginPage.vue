@@ -1,4 +1,4 @@
-<template>
+<template >
     <md-whiteframe tag="form" class="login-form"
                    novalidate @submit.prevent="wantsToSignUp ? signUpWithPassword() : signInWithPassword()">
         <h1>{{wantsToSignUp ? 'Sign up' : 'Sign in'}}</h1>
@@ -96,22 +96,14 @@
                 auth.signUpWithPassword ( this.email, this.password, this.name )
                 .then (
                     () => {
-                        this.$parent.open ();
-                        this.$router.replace ( '/demos' )
-                    },
-                    () => {
-                        this.$parent.open ();
+                        this.$router.replace ( '/dashboard/collection' )
                     } )
             },
             signInWithPassword(){
                 auth.signInWithPassword ( this.email, this.password )
                 .then (
                     () => {
-                        this.$parent.open ();
-                        this.$router.replace ( '/demos' )
-                    },
-                    () => {
-                        this.$parent.open ();
+                        this.$router.replace ( '/dashboard/collection' )
                     } )
             }
         }

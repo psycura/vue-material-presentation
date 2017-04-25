@@ -1,6 +1,8 @@
 import { dbRef } from '../store/firebase-client';
 import store from '../store/store';
 import * as authActions from './auth';
+import * as _ from 'lodash';
+
 
 export async function updateUserStatus ( user ) {
     let status = {
@@ -27,7 +29,7 @@ export async function updateUserStatus ( user ) {
 export async function addToMyCollection ( presentation ) {
     const user = authActions.getCurrentUser ();
     if ( user ) {
-        let index=Date.now();
+        let index = Date.now ();
         await dbRef.ref ( `users/${user.uid}/userPresentations/${index}` ).set ( presentation );
     }
 }
@@ -59,9 +61,36 @@ export async function removeFromCollection ( key ) {
     }
 }
 
-export function updateUserCollection ( collection ) {
+export function updateUserPresentation ( id,presentation ) {
     const user = authActions.getCurrentUser ();
     if ( user ) {
-        dbRef.ref ( `/users/${user.uid}/userPresentations` ).set ( collection );
+        dbRef.ref ( `/users/${user.uid}/userPresentations/${id}` ).set ( presentation );
     }
+}
+
+export function updateUserPresentations ( userPresentations ) {
+    const user = authActions.getCurrentUser ();
+    if ( user ) {
+        let presentations={};
+        _.forIn ( userPresentations, ( value, key ) => {
+            Object.assign(presentations,{[value.id]:value})
+        } );
+        dbRef.ref ( `/users/${user.uid}/userPresentations` ).set ( presentations );
+    }
+}
+
+export function updateDemoPresentation ( id, presentation ) {
+    dbRef.ref ( `/presentationDemos/${id}` ).set ( presentation );
+}
+
+export function getSlideLayout ( layout ) {
+    const demosRef = dbRef.ref ( `/slideTemplates/${layout}` );
+    
+    return new Promise ( resolve => {
+        demosRef.on ( 'value', snapshot => {
+            let res = snapshot.exportVal ();
+            resolve ( res )
+        } );
+    } )
+    
 }

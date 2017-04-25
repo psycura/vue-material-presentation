@@ -1,5 +1,5 @@
 <template>
-    <div class="wrapper">
+    <div class="presentation-wrapper">
         <div class="SlideBg">
             <div class="loading" v-if="loading">
                 Loading...
@@ -7,12 +7,12 @@
             
             <transition @enter="enter">
                 <div @click="moveToNextSlide" class="slide-wrapper" v-if="slides">
-                    <slide class="prev"
-                           :key="slides[slideIndex-1].id"
-                           :id="slides[slideIndex-1].id"
-                           v-if="slideIndex>0"
-                           :slide="slides[slideIndex-1]">
-                    </slide>
+                    <!--<slide class="prev"-->
+                    <!--:key="slides[slideIndex-1].id"-->
+                    <!--:id="slides[slideIndex-1].id"-->
+                    <!--v-if="slideIndex>0"-->
+                    <!--:slide="slides[slideIndex-1]">-->
+                    <!--</slide>-->
                     <slide class="current"
                            :key="slides[slideIndex].id"
                            :id="slides[slideIndex].id"
@@ -32,20 +32,27 @@
 <script>
     import { mapGetters } from 'vuex';
     import { mapActions } from 'vuex';
-    import DynamicSlide from '../DynamicSlide.vue'
+    import Slide from '../Slide.vue'
     import * as animations from '../../animations/index';
     import * as _ from 'lodash';
     
     export default{
         components : {
-            slide : DynamicSlide
+            Slide
+        },
+        props      : {
+            index  : {
+                required : false
+            },
+            slides : {
+                required : true
+            }
         },
         data () {
             return {
-                loading       : false,
-                slides        : null,
-                presentations : [],
-                url:''
+                loading        : false,
+//                slides        : null,
+                url            : '',
             }
         },
         computed   : {
@@ -53,13 +60,18 @@
                 'slideIndex',
                 'nextSlideIndex',
                 'currentSlides',
+                'userPresentations'
             ] )
+        },
+        watch      : {
+            '$route' ( to, from ) {
+            }
         },
         methods    : {
             ...mapActions ( [
                 'setCurrentSlides',
                 'initState',
-                'nextSlide'
+                'nextSlide',
             ] ),
             
             async moveToNextSlide(){
@@ -81,6 +93,8 @@
                         .then ( () => {
                             resolve ();
                         } );
+                    } else {
+                        resolve ()
                     }
                 } )
                 
@@ -105,35 +119,46 @@
                 } )
                 
             },
+            
+            /*            async checkCurrentSlides(){
+             const key = this.$route.params.index;
+             if ( !this.currentSlides ) {
+             await this.setCurrentSlides ( this.userPresentations[ key ].slides );
+             }
+             },*/
+            
             async setInitialState () {
-                this.slides  = null;
-                this.loading = true;
+//                this.slides  = null;
+//                this.loading = true;
                 this.initState ();
                 
-                if ( ~this.$route.path.indexOf ( 'demos' ) ) {
-                    this.url='/demos';
-                } else if ( ~this.$route.path.indexOf ( 'collection' ) ) {
-                    this.url='/collection';
+                if ( ~this.$route.path.indexOf ( 'gallery' ) ) {
+                    this.url = '/gallery';
+                } else if ( ~this.$route.path.indexOf ( 'dashboard' ) ) {
+                    this.url = '/dashboard';
                 }
-                this.loading = false;
-                this.slides  = this.currentSlides;
+//                this.loading = false;
+//                await this.checkCurrentSlides ();
+//                this.slides = this.currentSlides;
+                
             },
             
-            // Animations
             enter( el, done ) {
-/*                console.log('enter');
-                if ( this.slideIndex === 0 ) {
-                    this.animateIn ( this.slides[ this.slideIndex ] )
-                }*/
+                
                 done ()
             }
             
         },
         async created(){
+            console.log(this.slides);
             await this.setInitialState ();
-            if ( this.slideIndex === 0 ) {
-                this.animateIn ( this.slides[ this.slideIndex ] )
+            if(this.slides){
+                if ( this.slideIndex === 0 ) {
+                    console.log('first sklide');
+                    this.animateIn ( this.slides[ this.slideIndex ] )
+                }
             }
+
         }
     }
 </script>
@@ -153,12 +178,14 @@
         left:     0;
     }
     
-    .wrapper {
-        display:       flex;
-        align-items:   center;
-        align-content: center;
-        height:        100%;
-        width:         100%;
+    .presentation-wrapper {
+        display:        flex;
+        align-items:    center;
+        align-content:  center;
+        height:         100%;
+        width:          100%;
+        overflow:       hidden !important;
+        flex-direction: row !important;
     }
     
     .SlideBg {

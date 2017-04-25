@@ -1,16 +1,24 @@
 <template>
-    <div class="main-wrapper">
-        <mp-header></mp-header>
-        <div class="container">
-            <main-sidebar></main-sidebar>
-            <div class="page-content" :class="{'sidenav-collapsed':sideNavCollapsed}">
-                <router-view></router-view>
+    <md-layout class="viewport" md-gutter md-column md-flex md-align="center" >
+        <div class="md-content">
+            <div class="app-bar">
+                <mp-header></mp-header>
             </div>
+                <md-progress class="md-accent"
+                             v-if="!presentationDemos"
+                             md-indeterminate>
+                </md-progress>
+                <transition mode="out-in"
+                            v-if="!!presentationDemos"
+                            enter-active-class="animated fadeIn"
+                            leave-active-class="animated fadeOut"
+                            appear
+                            appear-active-class="animated fadeIn">
+                    <router-view></router-view>
+                </transition>
         </div>
-        <md-snackbar :md-position="vertical + ' ' + horizontal" ref="snackbar" :md-duration="duration">
-            <span>{{message}}</span>
-        </md-snackbar>
-    </div>
+    </md-layout>
+
 </template>
 
 <script>
@@ -25,33 +33,26 @@
             mpHeader    : Header,
             mainSidebar : Sidebar,
         },
-        data(){
-            return {
-                vertical   : 'bottom',
-                horizontal : 'center',
-                duration   : 4000
-            }
-        },
         computed   : {
             ...mapGetters ( [
                 'sideNavCollapsed',
                 'isLoggedIn',
                 'message',
-                'messageIsVisible'
+                'messageIsVisible',
+                'presentationDemos'
             ] ),
             
         },
+
         
-        methods    : {
+        methods : {
             ...mapActions ( {
                 fetchDemos             : 'setPresentationDemosRef',
                 fetchUserPresentations : 'setUserPresentationsRef',
                 expandMenu             : 'expandMenu',
                 setUserStatus          : 'setUserStatus'
             } ),
-            open() {
-                this.$refs.snackbar.open ();
-            }
+
         },
         
         async created(){
@@ -60,7 +61,8 @@
             await dbActions.getDemos ();
         },
         async updated(){
-            await dbActions.getUserPresentations ()
+            await dbActions.getUserPresentations ();
+            
         }
         
     }
@@ -70,45 +72,51 @@
     @import '../node_modules/animate.css/animate.css';
     @import '../node_modules/vue-material/dist/vue-material.css';
     @import '../node_modules/font-awesome/css/font-awesome.min.css';
+    @import "../node_modules/vodal/fade.css";
+    @import "../node_modules/vodal/rotate.css";
+    @import "../node_modules/vodal/door.css";
+    @import "../node_modules/vodal/fade.css";
+    @import "../node_modules/vodal/zoom.css";
     
     .animated {
         animation-duration: .377s;
     }
     
-    .main-wrapper {
+    body{
+        overflow: hidden;
+        height: 100%;
+    }
+    .viewport{
+        height: 100%;
+        position: relative;
+        box-sizing: border-box;
+        flex-wrap: nowrap;
+        max-width: 100%;
+        max-height: 100%;
+        flex: 1 1 100%;
+        
+    }
+    
+    .md-content{
+        display: flex;
         flex-direction: column;
-        display:        flex;
-        flex-grow:      1;
-        flex-shrink:    1;
-        flex-basis:     0;
-        position:       relative;
-        height:         100vh;
-        overflow:       auto;
-        
+        min-height: 0;
+        flex: 1;
+        position: relative;
+        overflow: auto;
     }
     
-    .container {
-        flex:           1;
-        box-sizing:     border-box;
-        display:        flex;
-        flex-direction: row;
-        position:       relative;
-        overflow-x:     hidden;
+    .app-bar{
+        position: relative;
+        display: block;
+        flex: 0 0 auto;
+        z-index: 20;
     }
     
-    .page-content {
-        min-height:  100%;
-        max-height:  100%;
-        flex:        1;
-        display:     flex;
-        flex-flow:   column;
-        transition:  margin-left .3s cubic-bezier(0.4, 0.0, 0.2, 1);
-        margin-left: 256px;
-        overflow:    hidden;
-        
-        &.sidenav-collapsed {
-            margin-left: 68px;
-        }
+
+    
+    .md-snackbar {
+        z-index: 1100;
     }
 
 </style>

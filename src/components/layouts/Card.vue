@@ -22,8 +22,13 @@
         },
         computed : {
             headerBg(){
-                const imgSrc = require ( `../../assets/${this.card.cardHeader.media}` );
-                const bg     = this.card.cardHeader.media ? `url(${imgSrc})` : this.card.cardHeader.bgColor;
+                let bg = '';
+                if ( !!this.card.cardHeader.media ) {
+                    const imgSrc = require ( `../../assets/${this.card.cardHeader.media}` );
+                    bg           = `url(${imgSrc})`;
+                } else {
+                    bg = this.card.cardHeader.bgColor;
+                }
                 return { background : bg, backgroundSize : 'cover' }
                 
             },

@@ -7,7 +7,8 @@ import router from './router';
 import VueFire from 'vuefire'
 import VueMaterial from 'vue-material';
 import SimpleVueValidation from 'simple-vue-validator'
-// import * as _ from 'lodash';
+
+/* eslint-disable no-new */
 
 
 import { sync } from 'vuex-router-sync';
@@ -15,7 +16,8 @@ import { sync } from 'vuex-router-sync';
 Vue.use ( VueMaterial );
 Vue.use(VueFire);
 Vue.use(SimpleVueValidation);
-// Vue.use(_);
+
+
 
 sync ( store, router );
 

@@ -1,39 +1,65 @@
 <template>
-    <div class="presentation-demos">
-        <md-whiteframe md-tag="md-toolbar" class="md-accent" md-elevation="2">
-            <h2 class="md-title">My Collection</h2>
-        </md-whiteframe>
-        <div class="demos-grid">
-            <div class="grid-cell" v-for="(demo, key, index) in userPresentations"
-                 :key="index">
-                <transition-group mode="out-in"
-                                  enter-active-class="animated fadeIn"
-                                  leave-active-class="animated fadeOut"
-                                  appear
-                                  appear-active-class=null>
-                    <md-card class="slide-preview" :key="index">
-                        <md-card-area>
-                            <md-card-header>
-                                <div class="md-title">{{demo.name}}</div>
-                            </md-card-header>
-                            
-                            <md-card-content>
-                                <slide :slide="demo.slides[0]"></slide>
-                            </md-card-content>
-                        </md-card-area>
-                        
-                        <md-card-actions>
-                            <md-button @click.native="navigateTo(key)">Preview</md-button>
-                            <md-button>Edit</md-button>
-                            <md-button class="md-warn"
-                                       id="removeBtn"
-                                       @click.native="removeFromCollection(key)">Remove
-                            </md-button>
-                        </md-card-actions>
-                    </md-card>
-                </transition-group>
+    <div class="presentation-demos" @scroll="scrollHandler('My Collection')">
+        <sub-header class="subHeader">
+            My Collection
+        </sub-header>
+        
+        <transition-group tag="div"
+                          mode="out-in"
+                          class="demos-grid"
+                          enter-active-class="animated fadeInDown"
+                          leave-active-class="animated fadeOutUp"
+                          appear
+                          appear-active-class=null>
+            <div class="grid-cell" v-for="(presentation, key, index) in userPresentations"
+                 :key="presentation.id">
+                <md-card class="slide-preview">
+                    <md-card-area>
+                        <md-card-content>
+                            <DynamicSlide v-if="presentation.slides"
+                                          :slide="presentation.slides[0]">
+                            </DynamicSlide>
+                        </md-card-content>
+                    </md-card-area>
+                    
+                    <md-card-header>
+                        <div class="md-title">{{presentation.name}}</div>
+                    </md-card-header>
+                    
+                    <md-card-actions>
+                        <md-button @click.native="openPreview(key)">
+                            Preview
+                        </md-button>
+                        <md-button @click.native="editPresentation(key)">
+                            Edit
+                        </md-button>
+                        <md-button class="md-warn"
+                                   id="removeBtn"
+                                   @click.native="removeFromCollection(presentation.id)">Remove
+                        </md-button>
+                    
+                    </md-card-actions>
+                </md-card>
             </div>
-        </div>
+        </transition-group>
+        
+        <md-speed-dial md-open="click" md-direction="bottom" class="add-btn md-fab md-fab-top-right">
+            <md-button class="md-fab " md-fab-trigger>
+                <md-icon md-icon-morph>event</md-icon>
+                <md-icon>add</md-icon>
+            </md-button>
+            
+            <md-button @click.native="addEmptyPresentation" class="md-fab md-primary md-mini md-clean">
+                <md-tooltip md-direction="left">Create new presentation</md-tooltip>
+                <md-icon>add</md-icon>
+            </md-button>
+            
+            <md-button @click.native="savePresentations" class="md-fab md-primary md-mini md-clean">
+                <md-tooltip md-direction="left">Save</md-tooltip>
+                <md-icon>save</md-icon>
+            </md-button>
+        </md-speed-dial>
+        
         <md-dialog-confirm
             :md-title="confirm.title"
             :md-content-html="confirm.contentHtml"
@@ -51,7 +77,8 @@
     import * as dbActions from '../../actions/db';
     
     import DynamicSlide from '../DynamicSlide.vue';
-    import SlidePreview from '../SlidePreview.vue'
+    import SlidePreview from '../containers/SlidePreview.vue'
+    import SubHeader from '../gui/SubHeader.vue'
     
     export default{
         props      : [ 'title', 'presentations', 'mode' ],
@@ -63,43 +90,74 @@
                     ok          : 'Yes',
                     cancel      : 'Cancel'
                 },
-                key     : ''
+                key     : '',
             }
         },
         computed   : {
             ...mapGetters ( [
-                'userPresentations'
+                'userPresentations',
+                'currentSlides',
             ] ),
         },
         components : {
-            slide : DynamicSlide
+            SlidePreview,
+            DynamicSlide,
+            SubHeader,
+            
         },
         
         methods : {
             ...mapActions ( [
                 'setMessage',
-                'setCurrentSlides'
+                'setCurrentSlides',
+                'toggleSubheader',
+                'setPresentationToEdit',
+                'initState',
+                'addEmptyPresentation',
+                'deletePresentation'
             ] ),
-            async navigateTo( key ){
-                await this.setCurrentSlides ( this.userPresentations[ key ].slides );
-                this.$router.push ( `/collection/${key}` );
+            
+            openPreview( index ){
+                this.initState ();
+                this.setCurrentSlides ( this.userPresentations[ index ].slides )
+                .then ( () => {
+                    this.$parent.openPreview ();
+                } )
+                
             },
-            removeFromCollection( key ){
-                this.key = key;
+            
+            async editPresentation( index ){
+                await this.setPresentationToEdit ( this.userPresentations[ index ] );
+                this.$router.push ( { name : 'editor', params : { index } } );
+            },
+            
+            removeFromCollection( id ){
+                this.key = id;
                 this.openDialog ( 'removeDialog' );
             },
+            
             openDialog( ref ) {
                 this.$refs[ ref ].open ();
             },
+            
             closeDialog( ref ) {
                 this.$refs[ ref ].close ();
             },
+            
             async onClose( type ) {
                 if ( type === 'ok' ) {
-                    await dbActions.removeFromCollection ( this.key );
-                    await this.setMessage ( 'The item was deleted successfully' );
-                    this.$parent.open ()
+                    this.deletePresentation ( this.key );
+                    this.$parent.openMessage ( 'The Item was deleted' )
                 }
+            },
+            
+            savePresentations(){
+                dbActions.updateUserPresentations ( this.userPresentations );
+                this.$parent.openMessage ( 'Collection saved successfully' )
+            },
+            
+            scrollHandler( title ){
+                this.$parent.scrollHandler ( title );
             }
         },
         
@@ -111,15 +169,12 @@
     .presentation-demos {
         background-color: #cfd8dc;
         height:           100%;
-        
-        .md-toolbar {
-            height: 56px;
-        }
     }
     
     .demos-grid {
         padding:               48px 12px;
         display:               grid;
+        /*display: flex;*/
         grid-template-columns: 1fr 1fr 1fr;
         grid-column-gap:       20px;
         grid-row-gap:          20px;
@@ -135,12 +190,24 @@
     }
     
     .slide-preview {
-        max-height: 288px;
+        height: 300px;
+        /*width:300px;*/
         
         .md-card-content {
             overflow: hidden;
-            height:   156px;
+            height:   194px;
+            padding:  0;
         }
+    }
+    
+    .md-card {
+        overflow: hidden;
+    }
+    
+    .add-btn {
+        top:   31px;
+        right: 30px;
+        
     }
 
 </style>

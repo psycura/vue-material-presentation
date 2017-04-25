@@ -6,7 +6,7 @@
 <script>
     import List from './layouts/List.vue'
     import Card from './layouts/Card.vue'
-    import EmptySlide from './layouts/EmptySlide.vue'
+    import AddSlide from './AddSlide.vue'
     
     export default{
         props      : {
@@ -15,13 +15,13 @@
             }
         },
         components : {
-            list  : List,
-            card  : Card,
-            empty : EmptySlide
+            list     : List,
+            card     : Card,
+            addSlide : AddSlide
         },
         computed   : {
             slideTemplate(){
-                return this.slide ? this.slide.slideTemplate : 'empty'
+                return this.slide.slideTemplate
             }
         },
         

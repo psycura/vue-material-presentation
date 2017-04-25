@@ -1,15 +1,36 @@
+import store from '../store/store';
 
 import Slides from '../components/containers/Slides.vue'
-import PresentationDemos from '../components/containers/PresentationsDemos.vue'
 import MyPresentations from '../components/containers/MyPresentations.vue'
-import Auth from '../components/containers/Auth.vue'
-import Editor from '../components/containers/Editor.vue'
+import LoginPage from '../components/pages/LoginPage.vue'
+import Editor from '../components/Editor/Editor.vue'
+import HomePage from '../components/pages/HomePage.vue'
+import GalleryPage from '../components/pages/GalleryPage.vue'
+import UserDashboard from '../components/pages/UserDashboard.vue'
 
 export const routes = [
-    { path : '/demos', component : PresentationDemos},
-    { path : '/collection', component : MyPresentations},
-    { path : '/login', component : Auth },
-    { path : '/demos/:index', component : Slides },
-    { path : '/collection/:index', component : Slides },
-    { path : '/editor/:index', component : Editor },
+    { path : '/', name : 'home', component : HomePage },
+    { path : '/gallery', name : 'gallery', component : GalleryPage },
+    { path : '/login', name : 'login', component : LoginPage },
+    { path : '/gallery/:index', name : 'demoSlideshow', component : Slides },
+    
+    {
+        path        : '/dashboard',
+        name        : 'dashboard',
+        redirect    : { name : 'collection' },
+        component   : UserDashboard,
+        beforeEnter : ( to, from, next ) => {
+            if ( store.getters.isLoggedIn ) {
+                next ();
+            } else {
+                next ( { path : '/login' } )
+                
+            }
+        },
+        children    : [
+            { path : 'collection', name : 'collection', component : MyPresentations },
+            { path : 'preview/:index', name : 'userSlideshow', component : Slides },
+            { path : 'editor/:index', name : 'editor', component : Editor },
+        ]
+    },
 ];
