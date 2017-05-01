@@ -43,8 +43,8 @@
         </md-dialog-confirm>
         
         <vodal :show="showModal" animation="zoom" @hide="showModal = false"
-               :width="90" :height="97" measure="%">
-            <DynamicSlide :slide="currentSlide"></DynamicSlide>
+               :width="97" :height="97" measure="%">
+            <editor v-if="showModal"></editor>
         </vodal>
     
     </div>
@@ -55,12 +55,15 @@
     import DynamicSlide from '../DynamicSlide.vue';
     import draggable from 'vuedraggable'
     import Vodal from 'vodal';
+    import SlideEdit from './SlideEdit.vue'
+    import Editor from './Editor.vue'
     
     export default{
         components : {
             DynamicSlide,
             draggable,
-            Vodal
+            Vodal,
+            Editor
             
         },
         data () {

@@ -3,7 +3,7 @@ import store from '../store/store';
 import Slides from '../components/containers/Slides.vue'
 import MyPresentations from '../components/containers/MyPresentations.vue'
 import LoginPage from '../components/pages/LoginPage.vue'
-import Editor from '../components/Editor/Editor.vue'
+import EditorPage from '../components/pages/EditorPage.vue'
 import HomePage from '../components/pages/HomePage.vue'
 import GalleryPage from '../components/pages/GalleryPage.vue'
 import UserDashboard from '../components/pages/UserDashboard.vue'
@@ -30,7 +30,7 @@ export const routes = [
         children    : [
             { path : 'collection', name : 'collection', component : MyPresentations },
             { path : 'preview/:index', name : 'userSlideshow', component : Slides },
-            { path : 'editor/:index', name : 'editor', component : Editor },
+            { path : 'editor/:index', name : 'editor', component : EditorPage },
         ]
     },
 ];

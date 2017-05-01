@@ -21,14 +21,14 @@
     import Sidebar from '../gui/Sidebar.vue'
     import { mapActions, mapGetters } from 'vuex';
     import Vodal from 'vodal';
-    import Slides from '../containers/Slides.vue'
+    import Slides from '../containers/Slides.vue';
     
     export default{
         components : {
             MyPresentations,
             Sidebar,
             Vodal,
-            Slides
+            Slides,
         },
         data(){
             return {

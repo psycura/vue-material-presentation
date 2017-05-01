@@ -7,6 +7,8 @@ import router from './router';
 import VueFire from 'vuefire'
 import VueMaterial from 'vue-material';
 import SimpleVueValidation from 'simple-vue-validator'
+// import { Vue2Dragula } from 'vue2-dragula'
+// import 'dragula/dist/dragula.css'
 
 /* eslint-disable no-new */
 
@@ -16,6 +18,13 @@ import { sync } from 'vuex-router-sync';
 Vue.use ( VueMaterial );
 Vue.use(VueFire);
 Vue.use(SimpleVueValidation);
+// Vue.use(Vue2Dragula, {
+//     logging: {
+//         // service: true
+//     }
+// });
+
+
 
 
 
