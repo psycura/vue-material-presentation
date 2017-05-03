@@ -20,7 +20,7 @@
                 <h2 class="md-display-1">Our Demos</h2>
             </md-layout>
             <md-layout md-row md-align="center">
-                <presentation-demos limit="3"></presentation-demos>
+                <presentation-demos limit="6"></presentation-demos>
             </md-layout>
             <md-layout class="gallery-btn" md-row md-align="center">
                 <span>Click here </span>
