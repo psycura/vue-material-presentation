@@ -7,35 +7,35 @@ import router from './router';
 import VueFire from 'vuefire'
 import VueMaterial from 'vue-material';
 import SimpleVueValidation from 'simple-vue-validator'
-// import { Vue2Dragula } from 'vue2-dragula'
-// import 'dragula/dist/dragula.css'
+import * as _ from 'lodash'
 
 /* eslint-disable no-new */
-
 
 import { sync } from 'vuex-router-sync';
 
 Vue.use ( VueMaterial );
-Vue.use(VueFire);
-Vue.use(SimpleVueValidation);
-// Vue.use(Vue2Dragula, {
-//     logging: {
-//         // service: true
-//     }
-// });
+Vue.use ( VueFire );
+Vue.use ( SimpleVueValidation );
+Vue.use ( _ );
 
 
 
+Vue.filter ( 'kebabCase', ( value ) => {
+    return _.kebabCase ( value )
+} );
 
+Vue.filter ( 'camelCase', ( value ) => {
+    return _.camelCase ( value )
+} );
 
 sync ( store, router );
 
 Vue.config.productionTip = false;
 /* eslint-disable no-new */
 new Vue ( {
-  el         : '#app',
-  router,
-  store,
-  template   : '<App/>',
-  components : { App }
+    el         : '#app',
+    router,
+    store,
+    template   : '<App/>',
+    components : { App }
 } );

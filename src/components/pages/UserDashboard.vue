@@ -35,7 +35,6 @@
                 subHeaderIsVisible : false,
                 title              : null,
                 showModal          : false,
-                message            : '',
                 vertical           : 'bottom',
                 horizontal         : 'center',
                 duration           : 4000,

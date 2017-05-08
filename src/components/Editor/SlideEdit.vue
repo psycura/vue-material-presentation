@@ -1,24 +1,18 @@
 <template>
     <div class="dropzone container" id="dropzone"
-         @drop="drop"
+         @drop.prevent="drop"
          @dragover.prevent>
         <transition-group tag="div"
+                          @click.native.self="selectCanvas"
+                          :style="canvasStyles"
                           mode="out-in"
                           enter-active-class="animated fadeIn"
                           leave-active-class="animated fadeOut"
                           appear
                           appear-active-class=null>
-            <md-card md-with-hover
-                     @click.native="selectElement(index)"
-                     v-for="block, index in slideBlocks"
-                     class="target-wrapper"
-                     :key="block">
-                <component :is="block.name" :style="block.styles"></component>
-                <md-button class="md-fab md-mini md-fab-top-center"
-                           @click.native="removeElement(index)">
-                    <md-icon>close</md-icon>
-                </md-button>
-            </md-card>
+            <block :component="block" :key="block.id" :index="index"
+                   @click.native="selectActiveElement(index)"
+                   v-for="block, index in slideBlocks"></block>
         </transition-group>
     </div>
 </template>
@@ -26,12 +20,13 @@
 <script>
     import { mapActions, mapGetters } from 'vuex';
     import DynamicSlide from '../DynamicSlide.vue';
-    import  { components } from './components/index';
+    import DynamicBlock from './DynamicBlock.vue';
+    import * as _ from 'lodash'
     
     export default{
         components : {
             slide : DynamicSlide,
-            List  : components.List.component
+            block : DynamicBlock
         },
         data () {
             return {
@@ -44,24 +39,30 @@
                 'presentation',
                 'currentSlide',
                 'slideBlocks',
-                'draggedElement'
-            ] ),
+                'draggedElement',
+                'canvasStyles'
+            ] )
         },
         methods    : {
             ...mapActions ( [
                 'removeElement',
                 'addNewElement',
                 'dropAction',
-                'selectElement'
+                'selectElement',
+                'initCanvas',
+                'selectCanvas'
             ] ),
-            async drop( ev ) {
-                ev.preventDefault ();
+            async drop(  ) {
                 await this.addNewElement ();
                 this.dropAction ();
             },
+            selectActiveElement( index ){
+                this.selectElement ( index )
+            }
         },
         
         created(){
+            this.initCanvas ()
         }
         
     }
@@ -70,12 +71,9 @@
 
 <style lang="scss" scoped>
     .dropzone {
-        width:  100%;
-        height: 100%;
-    }
-    
-    .target-wrapper {
-        display: inline-block;
+        width:    100%;
+        height:   100%;
+        position: relative;
     }
     
     /* example styles */

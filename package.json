@@ -44,6 +44,7 @@
     "vue-scrollview": "0.0.5",
     "vue-select": "^2.2.0",
     "vue-slick": "^1.1.2",
+    "vue-throttle-event": "^1.4.0",
     "vue2-dragula": "^2.4.4",
     "vuedraggable": "^2.10.0",
     "vuefire": "^1.4.2",

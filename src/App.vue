@@ -126,6 +126,18 @@
     .md-tooltip{
         z-index: 1000!important;
     }
+    
+    .md-tabs {
+        .md-tabs-content{
+            overflow-y: auto;
+        }
+        
+        .md-tabs-wrapper{
+            overflow-y: auto;
+        }
+    }
+
+    
 
 </style>
 

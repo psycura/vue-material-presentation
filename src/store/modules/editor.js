@@ -1,15 +1,19 @@
 import * as _ from 'lodash';
 import * as dbActions from '../../actions/db'
+import  { components } from '../../components/Editor/components/index';
+import  { canvas } from '../../components/Editor/components/canvas';
 
 const state = {
-    presentation    : {},
-    presentations   : null,
-    id              : null,
-    currentSlide    : null,
-    draggedElement  : null,
-    dragIsActive    : false,
-    selectedElement : null,
-    slideBlocks     : []
+    presentation         : {},
+    presentations        : null,
+    id                   : null,
+    currentSlide         : null,
+    draggedElement       : null,
+    dragIsActive         : false,
+    selectedElement      : null,
+    selectedElementIndex : null,
+    slideBlocks          : [],
+    canvas
 };
 
 const mutations = {
@@ -23,7 +27,7 @@ const mutations = {
     
     'SET_PRESENTATION'( state, presentation ){
         let slidesArray = [];
-        _.forIn ( presentation.slides, ( value, key ) => {
+        _.forIn ( presentation.slides, ( value ) => {
             slidesArray.push ( value )
         } );
         state.presentation        = presentation;
@@ -42,17 +46,23 @@ const mutations = {
     },
     
     'SET_CURRENT_SLIDE'( state, slide ){
-        
         state.currentSlide = slide
     },
     
     'START_DRAG_ACTION'( state, element ){
-        state.draggedElement = element;
+        state.draggedElement = _.cloneDeep ( components[ element ] );
         state.dragIsActive   = true;
     },
     
     'ADD_NEW_ELEMENT'( state ){
-        state.slideBlocks.push ( state.draggedElement );
+        let newBlock    = state.draggedElement;
+        newBlock.id     = Date.now ();
+        newBlock.styles = state.draggedElement.defaultStyles;
+        state.slideBlocks.push ( newBlock );
+    },
+    
+    'INIT_CANVAS'( state ){
+        state.canvas.styles = _.cloneDeep ( state.canvas.defaultStyles )
     },
     
     'REMOVE_ELEMENT'( state, index ){
@@ -66,8 +76,62 @@ const mutations = {
         state.draggedElement  = null;
         state.dragIsActive    = false;
     },
+    
     'SELECT_ELEMENT'( state, index ){
-        state.selectedElement = state.slideBlocks[ index ];
+        state.selectedElement      = state.slideBlocks[ index ];
+        state.selectedElementIndex = index;
+        
+    },
+    
+    'SELECT_CANVAS'( state ){
+        state.selectedElement      = state.canvas;
+        state.selectedElementIndex = 'canvas';
+    },
+    
+    'UPDATE_ELEMENT_PROPS'( state, props ){
+        console.log ( props );
+        let { value, units } = props;
+        let index            = state.selectedElementIndex;
+        let block            = {};
+        
+        if ( index === 'canvas' ) {
+            block = state.canvas;
+        } else {
+            block = state.slideBlocks[ index ];
+        }
+        
+        if ( value === 'flex' && !block.styles.flex ) {
+            block.styles.flex = {
+                flexDirection  : {
+                    label : 'Flex-direction',
+                    type  : 'select',
+                    value : 'row',
+                },
+                justifyContent : {
+                    label : 'Justify-content',
+                    type  : 'select',
+                    value : 'flex-start',
+                },
+                alignItems     : {
+                    label : 'Align-items',
+                    type  : 'select',
+                    value : 'flex-start',
+                },
+                alignContent   : {
+                    label : 'Align-content',
+                    type  : 'select',
+                    value : 'center',
+                }
+            }
+        }
+        
+        if ( props.subKey ) {
+            block.styles[ props.mainProp ][ props.propKey ].options[ props.subKey ].value = value;
+            block.styles[ props.mainProp ][ props.propKey ].options[ props.subKey ].units = units;
+        } else {
+            block.styles[ props.mainProp ][ props.propKey ].value = value;
+            block.styles[ props.mainProp ][ props.propKey ].units = units;
+        }
     }
     
 };
@@ -110,39 +174,46 @@ const actions = {
         } )
     },
     
-    removeSlide      : ( { commit }, index ) => {
+    removeSlide     : ( { commit }, index ) => {
         commit ( 'REMOVE_SLIDE', index )
     },
-    updateSlides     : ( { commit }, slides ) => {
+    updateSlides    : ( { commit }, slides ) => {
         commit ( 'UPDATE_SLIDES', slides )
     },
-    setCurrentSlide  : ( { commit }, slide ) => {
+    setCurrentSlide : ( { commit }, slide ) => {
         return new Promise ( resolve => {
             commit ( 'SET_CURRENT_SLIDE', slide );
             resolve ();
         } )
     },
-    startDragAction  : ( { commit }, element ) => {
+    startDragAction : ( { commit }, element ) => {
         commit ( 'START_DRAG_ACTION', element )
     },
-
-    addNewElement    : ( { commit } ) => {
+    
+    addNewElement : ( { commit } ) => {
         return new Promise ( ( resolve ) => {
             commit ( 'ADD_NEW_ELEMENT' );
             resolve ();
         } )
     },
-    removeElement    : ( { commit }, index ) => {
+    removeElement : ( { commit }, index ) => {
         commit ( 'REMOVE_ELEMENT', index )
     },
-    dropAction       : ( { commit } ) => {
-        
+    dropAction    : ( { commit } ) => {
         commit ( 'DROP_ACTION' )
     },
     
-    selectElement : ( { commit }, index ) => {
+    selectElement      : ( { commit }, index ) => {
         commit ( 'SELECT_ELEMENT', index )
-        
+    },
+    selectCanvas       : ( { commit } ) => {
+        commit ( 'SELECT_CANVAS' )
+    },
+    updateElementProps : ( { commit }, props ) => {
+        commit ( 'UPDATE_ELEMENT_PROPS', props )
+    },
+    initCanvas         : ( { commit } ) => {
+        commit ( 'INIT_CANVAS' )
     }
 };
 
@@ -169,8 +240,34 @@ const getters = {
         return state.selectedElement;
     },
     
+    activeElementStyles( state ){
+        if ( state.selectedElement ) {
+            return state.selectedElement.styles
+        }
+    },
+    
     slideBlocks( state ){
         return state.slideBlocks
+    },
+    
+    canvasStyles( state ){
+        let styles = {};
+        _.forEach ( state.canvas.styles, ( value ) => {
+            _.forIn ( value, ( item, itemKey ) => {
+                if ( item.value ) {
+                    styles[ itemKey ] = item.value + (item.units || '');
+                } else {
+                    _.forIn ( item.options, ( subItem ) => {
+                        styles[ itemKey ]
+                            ?
+                            styles[ itemKey ] = styles[ itemKey ] + subItem.value + (subItem.units || '') + ' '
+                            :
+                            styles[ itemKey ] = subItem.value + (subItem.units || '') + ' ';
+                    } )
+                }
+            } )
+        } );
+        return styles
     }
     
 };

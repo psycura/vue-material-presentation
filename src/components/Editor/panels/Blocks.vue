@@ -6,7 +6,7 @@
                  draggable="true"
                  @dragstart.native="drag(block)"
                  v-for="block, index in blocks"
-                 :key="index">
+                 :key="block">
             <md-tooltip>{{block.name}}</md-tooltip>
             <md-icon class="md-size-2x">{{block.icon}}</md-icon>
         </md-card>
@@ -30,10 +30,12 @@
                 'startDragAction'
             ] ),
             drag( el ) {
-                this.startDragAction ( el )
+//                let newEl=_.cloneDeep(el);
+                this.startDragAction ( el.name )
             }
             
         },
+
         
         created(){
             _.forIn ( components, ( value, key ) => {

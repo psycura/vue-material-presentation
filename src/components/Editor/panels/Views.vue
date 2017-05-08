@@ -7,7 +7,7 @@
 </template>
 
 <script>
-    import StyleManager from './StyleManager.vue'
+    import StyleManager from './StyleManager/StyleManager.vue'
     import Blocks from './Blocks.vue'
     import ComponentSettings from './ComponentSettings.vue'
     
@@ -34,5 +34,6 @@
 </script>
 
 <style lang="scss" scoped>
+
 
 </style>
