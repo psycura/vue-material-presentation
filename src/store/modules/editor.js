@@ -1,7 +1,25 @@
 import * as _ from 'lodash';
 import * as dbActions from '../../actions/db'
-import  { components } from '../../components/Editor/components/index';
-import  { canvas } from '../../components/Editor/components/canvas';
+import { components } from '../../components/Editor/blocks/index';
+import { canvas } from '../../components/Editor/blocks/canvas';
+import shortid from 'shortid'
+
+function getObj ( obj, id ) {
+    let res = _.find ( obj, ( block ) => {
+        return block.id === id;
+    } );
+    
+    if ( !res ) {
+        _.forIn ( obj, ( value ) => {
+            if ( _.size ( value.children ) > 0 ) {
+                res = getObj ( value.children, id );
+            }
+        } )
+    } else {
+        return res
+    }
+    return res;
+}
 
 const state = {
     presentation         : {},
@@ -13,40 +31,68 @@ const state = {
     selectedElement      : null,
     selectedElementIndex : null,
     slideBlocks          : [],
+    propPanelsState      : {
+        'General'     : true,
+        'Dimensions'  : false,
+        'Decorations' : false,
+        'Flex'        : false
+    },
     canvas
 };
 
 const mutations = {
     'ADD_SLIDE'( state, slide ){
-        
-        slide.id   = state.presentation.slides.length + 1;
-        let slides = state.presentation.slides;
+        slide.id         = state.presentation.slides.length + 1;
+        slide.components = [];
+        let slides       = state.presentation.slides;
         slides.push ( slide );
         state.presentation.slides = slides;
     },
     
     'SET_PRESENTATION'( state, presentation ){
         let slidesArray = [];
-        _.forIn ( presentation.slides, ( value ) => {
-            slidesArray.push ( value )
-        } );
+        
+        if ( _.size ( presentation.slides ) > 0 ) {
+            _.forIn ( presentation.slides, ( value ) => {
+                slidesArray.push ( value )
+            } );
+        } else {
+            let slide = {
+                id         : 1,
+                components : []
+            };
+            slidesArray.push ( slide )
+        }
+        
         state.presentation        = presentation;
         state.presentation.slides = slidesArray;
+        state.currentSlide        = state.presentation.slides[ 0 ];
     },
     
     'REMOVE_SLIDE'( state, index ){
         let slidesArray = state.presentation.slides;
         
-        let deleted               = slidesArray.splice ( index, 1 );
+        slidesArray.splice ( index, 1 );
         state.presentation.slides = slidesArray;
+        state.selectedElement     = null;
     },
     
     'UPDATE_SLIDES'( state, slides ){
         state.presentation.slides = slides
     },
     
-    'SET_CURRENT_SLIDE'( state, slide ){
-        state.currentSlide = slide
+    'SET_SLIDE_TO_EDIT'( state, slide ){
+        state.slideBlocks = [];
+        
+        state.currentSlide = slide;
+        _.forIn ( state.currentSlide.components, ( value ) => {
+            state.slideBlocks.push ( value );
+        } )
+    },
+    
+    'UPDATE_SLIDE_BLOCKS'( state, blocks ){
+        state.slideBlocks             = blocks;
+        state.currentSlide.components = state.slideBlocks;
     },
     
     'START_DRAG_ACTION'( state, element ){
@@ -54,11 +100,51 @@ const mutations = {
         state.dragIsActive   = true;
     },
     
-    'ADD_NEW_ELEMENT'( state ){
-        let newBlock    = state.draggedElement;
-        newBlock.id     = Date.now ();
+    'ADD_NEW_ELEMENT'( state, containerId ){
+        // console.log ( containerId );
+        let id      = shortid.generate ();
+        let target  = null;
+        let pathObj = null;
+        
+        const newBlock  = state.draggedElement;
+        newBlock.id     = `${newBlock.name}_${id}`;
         newBlock.styles = state.draggedElement.defaultStyles;
-        state.slideBlocks.push ( newBlock );
+        
+        if ( containerId === 'canvas' ) {
+            target = state.slideBlocks;
+            target.push ( newBlock );
+            state.currentSlide.components = target;
+            
+        } else {
+            pathObj = getObj ( state.slideBlocks, containerId );
+            if ( !pathObj.children ) {
+                pathObj.children = [];
+            }
+            target     = pathObj.children;
+            const name = newBlock.name;
+            if ( pathObj.accept === '*' ) {
+                target.push ( newBlock );
+            } else {
+                const acceptables = pathObj.accept;
+                let res           = null;
+                _.forEach ( acceptables, ( value ) => {
+                    if ( value === name ) {
+                        res = true;
+                        return;
+                    }
+                } );
+                if ( res ) {
+                    target.push ( newBlock );
+                } else {
+                    console.log ( 'you cant drop here' );
+                }
+            }
+        }
+        state.currentSlide.components = state.slideBlocks;
+        state.selectedElement         = null;
+        state.draggedElement          = null;
+        state.dragIsActive            = false
+        
     },
     
     'INIT_CANVAS'( state ){
@@ -67,8 +153,11 @@ const mutations = {
     
     'REMOVE_ELEMENT'( state, index ){
         let array = state.slideBlocks;
+        // let array = state.currentSlide.components;
         array.splice ( index, 1 );
-        state.slideBlocks = array;
+        // state.currentSlide.components = array;
+        state.slideBlocks             = array;
+        state.currentSlide.components = state.slideBlocks;
     },
     
     'DROP_ACTION'( state ){
@@ -77,10 +166,9 @@ const mutations = {
         state.dragIsActive    = false;
     },
     
-    'SELECT_ELEMENT'( state, index ){
-        state.selectedElement      = state.slideBlocks[ index ];
-        state.selectedElementIndex = index;
-        
+    'SELECT_ELEMENT'( state, blockId ){
+        // state.selectedElement = getObj ( state.currentSlide.components, blockId );
+        state.selectedElement = getObj ( state.slideBlocks, blockId );
     },
     
     'SELECT_CANVAS'( state ){
@@ -89,18 +177,20 @@ const mutations = {
     },
     
     'UPDATE_ELEMENT_PROPS'( state, props ){
-        console.log ( props );
-        let { value, units } = props;
-        let index            = state.selectedElementIndex;
-        let block            = {};
+        // console.log ( props );
+        let { value, units, id } = props;
+        let valuePattern         = /\d+/g;
+        const val                = value.match ( valuePattern ) ? value.match ( valuePattern )[ 0 ] : value;
         
-        if ( index === 'canvas' ) {
+        let block = null;
+        
+        if ( id === 'canvas' ) {
             block = state.canvas;
         } else {
-            block = state.slideBlocks[ index ];
+            block = getObj ( state.slideBlocks, id );
         }
         
-        if ( value === 'flex' && !block.styles.flex ) {
+        if ( val === 'flex' && !block.styles.flex ) {
             block.styles.flex = {
                 flexDirection  : {
                     label : 'Flex-direction',
@@ -129,9 +219,16 @@ const mutations = {
             block.styles[ props.mainProp ][ props.propKey ].options[ props.subKey ].value = value;
             block.styles[ props.mainProp ][ props.propKey ].options[ props.subKey ].units = units;
         } else {
-            block.styles[ props.mainProp ][ props.propKey ].value = value;
+            block.styles[ props.mainProp ][ props.propKey ].value = val;
             block.styles[ props.mainProp ][ props.propKey ].units = units;
         }
+        state.currentSlide.components = state.slideBlocks;
+    },
+    'TOGGLE_PROP_PANEL'( state, panel ){
+        state.propPanelsState[ panel ] = !state.propPanelsState[ panel ]
+    },
+    'UPDATE_INNER_TEXT'( state, text ){
+        state.selectedElement.text = text;
     }
     
 };
@@ -180,19 +277,22 @@ const actions = {
     updateSlides    : ( { commit }, slides ) => {
         commit ( 'UPDATE_SLIDES', slides )
     },
-    setCurrentSlide : ( { commit }, slide ) => {
+    setSlideToEdit  : ( { commit }, slide ) => {
         return new Promise ( resolve => {
-            commit ( 'SET_CURRENT_SLIDE', slide );
+            commit ( 'SET_SLIDE_TO_EDIT', slide );
             resolve ();
         } )
     },
     startDragAction : ( { commit }, element ) => {
-        commit ( 'START_DRAG_ACTION', element )
+        return new Promise ( ( resolve ) => {
+            commit ( 'START_DRAG_ACTION', element );
+            resolve ();
+        } )
     },
     
-    addNewElement : ( { commit } ) => {
+    addNewElement : ( { commit }, container ) => {
         return new Promise ( ( resolve ) => {
-            commit ( 'ADD_NEW_ELEMENT' );
+            commit ( 'ADD_NEW_ELEMENT', container );
             resolve ();
         } )
     },
@@ -203,8 +303,8 @@ const actions = {
         commit ( 'DROP_ACTION' )
     },
     
-    selectElement      : ( { commit }, index ) => {
-        commit ( 'SELECT_ELEMENT', index )
+    selectElement      : ( { commit }, id ) => {
+        commit ( 'SELECT_ELEMENT', id )
     },
     selectCanvas       : ( { commit } ) => {
         commit ( 'SELECT_CANVAS' )
@@ -214,11 +314,18 @@ const actions = {
     },
     initCanvas         : ( { commit } ) => {
         commit ( 'INIT_CANVAS' )
+    },
+    togglePropPanel    : ( { commit }, panel ) => {
+        commit ( 'TOGGLE_PROP_PANEL', panel )
+    },
+    updateInnerText    : ( { commit }, text ) => {
+        commit ( 'UPDATE_INNER_TEXT', text )
     }
+    
 };
 
 const getters = {
-    presentation( state ){
+    currentPresentation( state ){
         return state.presentation;
     },
     id( state ){
@@ -248,26 +355,46 @@ const getters = {
     
     slideBlocks( state ){
         return state.slideBlocks
+        
+        
     },
     
     canvasStyles( state ){
         let styles = {};
         _.forEach ( state.canvas.styles, ( value ) => {
             _.forIn ( value, ( item, itemKey ) => {
+                let key = itemKey.substring ( 3 );
                 if ( item.value ) {
-                    styles[ itemKey ] = item.value + (item.units || '');
+                    styles[ key ] = item.value + (item.units || '');
                 } else {
                     _.forIn ( item.options, ( subItem ) => {
-                        styles[ itemKey ]
+                        styles[ key ]
                             ?
-                            styles[ itemKey ] = styles[ itemKey ] + subItem.value + (subItem.units || '') + ' '
+                            styles[ key ] = styles[ key ] + subItem.value + (subItem.units || '') + ' '
                             :
-                            styles[ itemKey ] = subItem.value + (subItem.units || '') + ' ';
+                            styles[ key ] = subItem.value + (subItem.units || '') + ' ';
                     } )
                 }
             } )
         } );
         return styles
+    },
+    
+    getElement : state => id => {
+        return getObj ( state.slideBlocks, id )
+    },
+    
+    propPanelsState( state ){
+        return state.propPanelsState;
+    },
+    
+    getInnerText : state => id => {
+        console.log ( id );
+        const obj = getObj ( state.slideBlocks, id );
+        console.log ( obj );
+        if ( obj.name === 'TextField' ) {
+            return obj.text
+        }
     }
     
 };

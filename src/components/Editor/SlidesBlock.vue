@@ -1,37 +1,32 @@
 <template>
-    <div class="slides-block">
-        <div class="slides-grid">
-            <draggable v-model="presentationSlides">
+    <div class="grid-wrapper">
+        <transition-group tag="div"
+                          v-if="currentPresentation"
+                          class="slides-grid"
+                          mode="out-in"
+                          enter-active-class="animated fadeInDown"
+                          leave-active-class="animated fadeOutUp"
+                          appear
+                          appear-active-class=null>
+            <div class="grid-cell"
+                 v-for="(slide, index) in currentPresentation.slides"
+                 :key="slide.id">
                 
-                <transition-group tag="div"
-                                  mode="out-in"
-                                  enter-active-class="animated fadeInDown"
-                                  leave-active-class="animated fadeOutUp"
-                                  appear
-                                  appear-active-class=null>
-                    <div class="grid-cell"
-                         v-for="(slide, index) in presentationSlides"
-                         :key="slide.id">
-                        
-                        <md-card class="slide-preview"
-                                 :key="index"
-                                 md-with-hover>
-                            <md-card-area>
-                                <md-card-header>
-                                    <md-button class="md-icon-button  md-dense" @click.native="remove(index)">
-                                        <md-icon>close</md-icon>
-                                    </md-button>
-                                </md-card-header>
-                                <md-card-content @click.native="setSlideToEdit(slide)">
-                                    <DynamicSlide :slide="slide"></DynamicSlide>
-                                </md-card-content>
-                            </md-card-area>
-                        </md-card>
-                    </div>
-                </transition-group>
-            </draggable>
-        
-        </div>
+                <md-card class="slide-preview"
+                         :class="slide.id===currentSlide.id&& ' active'"
+                         :key="index"
+                         md-with-hover>
+                    <md-card-area>
+                        <md-card-content @click.native="selectSlide(slide)">
+                            <md-button class="md-icon-button  md-dense" @click.native="remove(index)">
+                                <md-icon>close</md-icon>
+                            </md-button>
+                            <DynamicSlide :slide="slide"></DynamicSlide>
+                        </md-card-content>
+                    </md-card-area>
+                </md-card>
+            </div>
+        </transition-group>
         
         <md-dialog-confirm
             :md-title="confirm.title"
@@ -41,30 +36,20 @@
             @close="onClose"
             ref="removeDialog">
         </md-dialog-confirm>
-        
-        <vodal :show="showModal" animation="zoom" @hide="showModal = false"
-               :width="97" :height="97" measure="%">
-            <editor v-if="showModal"></editor>
-        </vodal>
-    
     </div>
+
 </template>
 
 <script>
     import { mapActions, mapGetters } from 'vuex';
     import DynamicSlide from '../DynamicSlide.vue';
-    import draggable from 'vuedraggable'
-    import Vodal from 'vodal';
     import SlideEdit from './SlideEdit.vue'
     import Editor from './Editor.vue'
     
-    export default{
+    export default {
         components : {
             DynamicSlide,
-            draggable,
-            Vodal,
             Editor
-            
         },
         data () {
             return {
@@ -79,31 +64,22 @@
                     ok          : 'Yes',
                     cancel      : 'Cancel'
                 },
-                
-                showModal : false
             }
         },
         computed   : {
             ...mapGetters ( [
-                'presentation',
+                'currentPresentation',
                 'id',
                 'currentSlide'
             ] ),
             
-            presentationSlides : {
-                get() {
-                    return this.$store.state.editor.presentation.slides;
-                },
-                set( value ) {
-                    this.$store.commit ( 'UPDATE_SLIDES', value )
-                }
-            },
         },
         methods    : {
             ...mapActions ( [
                 'removeSlide',
                 'updateSlides',
-                'setCurrentSlide'
+                'setSlideToEdit',
+                'addSlide'
             ] ),
             
             remove( index ){
@@ -111,12 +87,12 @@
                 this.openDialog ( 'removeDialog' );
             },
             
-            setSlideToEdit( slide ){
-                this.setCurrentSlide ( slide )
-                .then ( () => {
-                    this.showModal = true;
+            async selectSlide( slide ){
+                await this.setSlideToEdit ( slide );
+                this.$router.push ( {
+                    name   : 'editSlides',
+                    params : { presentation : this.currentPresentation.name, slideIndex : this.currentSlide.id }
                 } )
-                
             },
             
             openDialog( ref ) {
@@ -128,21 +104,24 @@
             async onClose( type ) {
                 if ( type === 'ok' ) {
                     await this.removeSlide ( this.index );
-                    this.$parent.open ( 'Slide deleted' )
+                    if ( _.size ( this.currentPresentation.slides ) === 0 ) {
+                        await this.addSlide ( 'empty' )
+                    }
+                    await this.setSlideToEdit ( _.last ( this.currentPresentation.slides ) );
+                    this.$parent.openMessage ( 'Slide deleted' )
+                    
                 }
             },
-            
-        },
-        created(){
-            this.setCurrentSlide ( this.presentationSlides[ 0 ] );
-            this.id = this.$route.params.index;
-        },
-        
+        }
     }
 
 </script>
 
 <style lang="scss" scoped>
+    
+    .grid-wrapper {
+        overflow-y: auto;
+    }
     
     .list-enter-active, .list-leave-active {
         transition: all 1s;
@@ -154,41 +133,51 @@
     }
     
     .slides-block {
-        position:   relative;
+        position: relative;
         /*height:     250px;*/
         
     }
     
     .slides-grid {
-        padding:  25px 0;
-        position: relative;
+        padding:        25px 0;
+        position:       relative;
+        display:        flex;
+        flex-direction: column;
+        align-items:    center;
     }
     
     .grid-cell {
-        margin:  0 12px 24px 12px;
-        width:   300px;
-        display: inline-block;
+        /*margin:  0 12px 24px 12px;*/
+        margin-bottom: 10px;
+        width:         90%;
+        display:       inline-block;
         
     }
     
     .active-slide {
         border: 1px solid red;
+        
     }
     
     .slide-preview {
         max-height: 288px;
         
+        &.active {
+            border: 2px solid rgba(255, 87, 34, 0.4);
+        }
+        
         .md-card-content {
             overflow: hidden;
             height:   156px;
+            position: relative;
+            padding:  0;
         }
         
-        .md-card-header {
-            padding:         5px;
-            display:         flex;
-            justify-content: flex-end;
+        .md-icon-button {
+            position: absolute !important;
+            right:    -5px !important;
         }
+        
     }
-    
 
 </style>

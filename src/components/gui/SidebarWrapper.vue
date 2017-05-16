@@ -1,38 +1,12 @@
 <template>
     <div class="main-sidebar " :class="{'collapsed':sideNavCollapsed}">
-        <div class="sidenav-content">
-            <md-list>
-                <div class="nav-group nav-group-root" key="overview">
-                    <md-list-item id="myCollection">
-                        <md-icon>shop_two</md-icon>
-                        <span class="entry-displayname">My Collection</span>
-                        <md-tooltip v-show="sideNavCollapsed" md-direction="right">
-                            myCollection
-                        </md-tooltip>
-                        <md-list-expand>
-                                <md-list>
-                                    <transition-group tag="div"
-                                                      mode="out-in"
-                                                      class="demos-grid"
-                                                      enter-active-class="animated fadeInDown"
-                                                      leave-active-class="animated fadeOut"
-                                                      appear
-                                                      appear-active-class=null>
-                                    <md-list-item
-                                        class="md-inset"
-                                        v-for="(presentation,key, index) in userPresentations"
-                                        @click.native="openPreview(presentation.slides)"
-                                        :key="presentation.id">
-                                        {{presentation.name}}
-                                    </md-list-item>
-                                    </transition-group>
-                                </md-list>
-                        </md-list-expand>
-                    </md-list-item>
-                </div>
-            </md-list>
-        </div>
-        
+        <transition mode="out-in"
+                    enter-active-class="animated slideInDown"
+                    leave-active-class="animated slideOutUp"
+                    appear
+                    appear-active-class="animated slideInDown">
+            <slot></slot>
+        </transition>
         <div class="sidenav-footer">
         </div>
         
@@ -50,34 +24,18 @@
         computed : {
             ...mapGetters ( [
                 'sideNavCollapsed',
-                'userInfo',
-                'isLoggedIn',
-                'userPresentations',
-                'currentSlides'
-            
             ] ),
         },
         methods  : {
             ...mapActions ( [
                 'expandMenu',
-                'setCurrentSlides',
-                'setPresentationToEdit',
-                'initState',
             ] ),
-            openPreview( slides ){
-                this.initState ();
-                this.setCurrentSlides ( slides )
-                .then ( () => {
-                    this.$parent.openPreview ();
-                } )
-            },
-            
         },
     }
 
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
     .main-sidebar {
         position:       absolute;
         top:            0;
@@ -120,6 +78,10 @@
                 transform: rotate(180deg);
             }
             
+        }
+    
+        .active {
+            color: #e91e63;
         }
     }
     
@@ -246,7 +208,5 @@
         transition:     opacity .3s ease;
     }
     
-    .active {
-        color: #e91e63;
-    }
+
 </style>

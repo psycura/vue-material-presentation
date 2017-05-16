@@ -5,6 +5,8 @@ import presentations from './modules/presentations';
 import users from './modules/users';
 import utils from './modules/utils';
 import editor from './modules/editor';
+import createPersistedState from 'vuex-persistedstate'
+
 
 import { firebaseMutations } from 'vuexfire'
 
@@ -21,6 +23,8 @@ export default new Vuex.Store ( {
             utils,
             editor
         },
+        // plugins: [createPersistedState({key:'materialPresentation'})]
+        
         
     }
 )

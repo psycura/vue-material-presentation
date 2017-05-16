@@ -1,7 +1,7 @@
 <template>
     <div class="editor">
         <md-whiteframe md-tag="md-toolbar" class="md-accent" md-elevation="2">
-            <input type="text" class="title-input" v-model="presentation.name">
+            <input type="text" class="title-input" v-model="currentPresentation.name">
         </md-whiteframe>
             <md-speed-dial md-open="click" md-direction="top" class="add-btn md-fab-bottom-right md-primary">
                 <md-button class="md-fab" md-fab-trigger>
@@ -43,8 +43,8 @@
     import { mapActions, mapGetters } from 'vuex';
     import * as dbActions from '../../actions/db';
     import * as _ from 'lodash';
-    import SlidesBlock from '../Editor/SlidesBlock.vue'
-    import SlideEdit from '../Editor/SlideEdit.vue'
+    import SlidesBlock from './SlidesBlock.vue'
+    import SlideEdit from './SlideEdit.vue'
     
     export default{
         components : {
@@ -66,7 +66,7 @@
         computed   : {
             ...mapGetters ( [
                 'currentSlides',
-                'presentation',
+                'currentPresentation',
                 'currentSlide'
             ] ),
         },
@@ -87,8 +87,8 @@
             
 
             async saveChanges(){
-//                await dbActions.updateDemoPresentation ( this.id, this.presentation );
-                await dbActions.updateUserPresentation ( this.id, this.presentation );
+//                await dbActions.updateDemoPresentation ( this.id, this.currentPresentation );
+                await dbActions.updateUserPresentation ( this.id, this.currentPresentation );
                 this.message = 'Presentation saved successfully';
                 this.open ();
             },

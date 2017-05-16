@@ -1,10 +1,11 @@
 <template>
     <md-tab md-label="" md-icon="colorize"
+            :md-active="isActive"
             md-tooltip="Style Manager"
             class="style-manager">
         <md-list v-if="selectedElement" md-expand-multiple>
             <div class="block-info">
-                <md-chip>{{selectedElement.name}}</md-chip>
+                <md-chip class="md-accent">{{selectedElement.name}}</md-chip>
                 <md-chip v-if="selectedElement.id">{{selectedElement.id}}</md-chip>
             </div>
             <sm-prop title="General"
@@ -60,18 +61,23 @@
             ] ),
             
             isFlex(){
-                return this.activeElementStyles.general.display.value === 'flex'
+                return this.activeElementStyles.general['01_display'].value === 'flex'
+            },
+            
+            isActive(){
+                return !!this.selectedElement
             }
         },
         
-        methods  : {
+        methods : {
             ...mapActions ( [
-                'updateElementProps'
+                'updateElementProps',
             ] ),
             dataReceived( prop, event ){
                 const data = {
                     ...event,
-                    mainProp : prop
+                    mainProp : prop,
+                    id       : this.selectedElement.id
                 };
                 this.updateElementProps ( data );
             }
@@ -89,7 +95,13 @@
     .block-info {
         display:         flex;
         flex-direction:  row;
-        justify-content: center;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        padding:0 12px;
+    }
+    
+    .md-chip{
+        margin-bottom:5px;
     }
 
 </style>

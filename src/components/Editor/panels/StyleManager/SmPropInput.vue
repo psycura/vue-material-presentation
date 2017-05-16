@@ -1,7 +1,7 @@
 <template>
     <div>
         <div class="prop-label">
-            <span class="md-caption">{{propKey | kebabCase}}</span>
+            <span class="md-caption">{{propKey | trimPropKey |  kebabCase}}</span>
         </div>
         <div class="field">
         <span class="input-holder">
@@ -40,7 +40,7 @@
             
             changeValue( val ){
                 const newVal = _.parseInt ( this.prop.value ) + val;
-                this.emitData ( newVal );
+                this.emitData ( newVal.toString() );
             },
             
         }

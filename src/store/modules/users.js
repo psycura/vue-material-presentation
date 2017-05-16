@@ -1,4 +1,5 @@
 import * as _ from 'lodash';
+import shortid from 'shortid'
 
 const state = {
     userPresentations : null,
@@ -35,12 +36,17 @@ const mutations = {
     },
     
     'CREATE_PRESENTATION'( state ){
-        let index          = Date.now ();
+        let id             = shortid.generate ();
         const presentation = {
-            name   : 'empty slide',
-            id     : index,
+            name   : 'New Presentation',
+            id,
             slides : []
         };
+        let slide          = {
+            id         : 1,
+            components : []
+        };
+        presentation.slides.push ( slide );
         state.userPresentations.push ( presentation );
     }
 };

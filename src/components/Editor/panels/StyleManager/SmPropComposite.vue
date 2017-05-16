@@ -1,7 +1,7 @@
 <template>
     <div>
         <div class="prop-label">
-            <span class="md-caption">{{propKey | kebabCase}}</span>
+            <span class="md-caption">{{propKey | trimPropKey | kebabCase}}</span>
         </div>
         <div class="field composite">
             <div class="input-holder">
@@ -24,7 +24,7 @@
     import SmPropPicker from './SmPropPicker.vue'
     import SmPropInput from './SmPropInput.vue'
     
-    export default{
+    export default {
         props      : [ 'prop', 'propKey' ],
         components : {
             smSelect : SmPropSelect,
@@ -45,8 +45,6 @@
                 this.$emit ( 'updateValue', data )
                 
             },
-            
-
             
         }
     }
@@ -125,6 +123,7 @@
         width:         50%;
         margin-bottom: 5px;
         padding:       0 5px;
+        
     }
     
     .field-units {
@@ -182,11 +181,11 @@
         }
         
         .property-item {
-            flex: 1 1 60px;
+            flex: 1 1 75px;
             
         }
         
-        .input-holder{
+        .input-holder {
             position: relative;
         }
         

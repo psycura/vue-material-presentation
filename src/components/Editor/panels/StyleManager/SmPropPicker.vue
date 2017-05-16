@@ -1,7 +1,7 @@
 <template>
     <div>
         <div class="prop-label">
-            <span class="md-caption">{{propKey | kebabCase}}</span>
+            <span class="md-caption">{{propKey | trimPropKey |  kebabCase}}</span>
         </div>
         <div class="field picker" :class="active &&' active'">
             <div class="input-holder">
@@ -23,7 +23,7 @@
                         appear-active-class="animated zoomIn">
                 <chrome-picker v-model="prop.value"
                                @change-color="onColorChange"
-                               @click.native="colorProp=prop"
+                               @mousedown.native="colorProp=prop"
                                v-if="pickerIsOpen">
                 </chrome-picker>
             </transition>

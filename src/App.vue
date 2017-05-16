@@ -23,7 +23,7 @@
 
 <script>
     import Header from './components/gui/Header.vue';
-    import Sidebar from './components/gui/Sidebar.vue';
+    import Sidebar from './components/UserDashboard/UserCollectionSidebar.vue';
     import { mapActions, mapGetters } from 'vuex';
     import * as dbActions from './actions/db';
     import * as authActions from './actions/auth';
@@ -56,8 +56,9 @@
         
         async created(){
             await authActions.getCurrentUser ();
-            await dbActions.getUserPresentations ();
             await dbActions.getDemos ();
+            await dbActions.getUserPresentations ();
+    
         },
         async updated(){
             await dbActions.getUserPresentations ();
@@ -76,7 +77,9 @@
     @import "../node_modules/vodal/door.css";
     @import "../node_modules/vodal/fade.css";
     @import "../node_modules/vodal/zoom.css";
-    /*@import './vendors/grapes.min.css';*/
+    @import "../node_modules/jquery-ui/themes/base/all.css";
+    @import "../node_modules/medium-editor/dist/css/medium-editor.min.css";
+    
     
     .animated {
         animation-duration: .377s;
@@ -134,6 +137,35 @@
         
         .md-tabs-wrapper{
             overflow-y: auto;
+        }
+    }
+    
+    .medium-editor-toolbar-actions{
+        display: flex!important;
+        flex-direction: row!important;
+        align-items: baseline!important;
+        .medium-editor-action{
+            background: #ff5722!important;
+            color: rgba(255, 255, 255, .54)!important;
+            border: none!important;
+            &:hover{
+                color: rgba(255, 255, 255, .87)!important;
+            }
+        }
+    }
+    
+    .medium-toolbar-arrow-under{
+        &:after{
+            transform: rotateZ(45deg)!important;
+            border-color: #ff5722!important;
+            bottom: -5px!important;
+            height: 13px!important;
+        }
+    }
+    
+    .medium-editor-element{
+        &:focus{
+            outline: none!important;
         }
     }
 

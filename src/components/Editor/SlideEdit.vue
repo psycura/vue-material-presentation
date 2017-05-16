@@ -1,70 +1,132 @@
 <template>
-    <div class="dropzone container" id="dropzone"
-         @drop.prevent="drop"
-         @dragover.prevent>
-        <transition-group tag="div"
-                          @click.native.self="selectCanvas"
-                          :style="canvasStyles"
-                          mode="out-in"
-                          enter-active-class="animated fadeIn"
-                          leave-active-class="animated fadeOut"
-                          appear
-                          appear-active-class=null>
-            <block :component="block" :key="block.id" :index="index"
-                   @click.native="selectActiveElement(index)"
-                   v-for="block, index in slideBlocks"></block>
-        </transition-group>
+    <div class="dropzone container " id="dropzone">
+        <div @click.self="selectCanvas"
+             :class="isSelected"
+             :style="canvasStyles"
+             id="canvas"
+             class="dropzone-canvas droppable">
+            <block v-for="block, index in slideBlocks"
+                   :component="block" :key="block.id">
+            </block>
+        </div>
+        <md-snackbar :md-position="vertical + ' ' + horizontal" ref="snackbar" :md-duration="duration">
+            <span>{{message}}</span>
+        </md-snackbar>
     </div>
 </template>
 
 <script>
     import { mapActions, mapGetters } from 'vuex';
     import DynamicSlide from '../DynamicSlide.vue';
-    import DynamicBlock from './DynamicBlock.vue';
-    import * as _ from 'lodash'
+    import DynamicBlock from './blocks/DynamicBlock.vue';
+    import $ from 'jquery'
+    import jquery_ui from 'jqueryui/'
     
-    export default{
+    export default {
         components : {
             slide : DynamicSlide,
             block : DynamicBlock
         },
         data () {
             return {
-                previewIsActive : false
+                previewIsActive : false,
+                message         : '',
+                vertical        : 'bottom',
+                horizontal      : 'center',
+                duration        : 4000,
+                index           : null,
+                id              : null
             }
         },
-        computed   : {
+        
+        computed : {
             ...mapGetters ( [
-                'currentSlides',
-                'presentation',
-                'currentSlide',
                 'slideBlocks',
+                'canvasStyles',
+                'getElement',
                 'draggedElement',
-                'canvasStyles'
-            ] )
+                'selectedElement'
+            ] ),
+            
+            isSelected(){
+                if ( this.selectedElement ) {
+                    if ( this.selectedElement.id === 'canvas' ) {
+                        return ' selected'
+                    }
+                    else {
+                        return ''
+                    }
+                } else {
+                    return ''
+                }
+            },
         },
-        methods    : {
+        methods  : {
             ...mapActions ( [
                 'removeElement',
                 'addNewElement',
                 'dropAction',
                 'selectElement',
                 'initCanvas',
-                'selectCanvas'
+                'selectCanvas',
+                'toggleSubheader'
             ] ),
-            async drop(  ) {
-                await this.addNewElement ();
+            
+            checkDropAccess(){
+                let res          = true;
+                const draggedEl  = this.draggedElement;
+                const targetName = 'Canvas';
+                
+                if ( draggedEl.dropTarget !== '*' ) {
+                    _.forEach ( draggedEl.dropTarget, ( value ) => {
+                        if ( value === targetName ) {
+                            return true
+                        }
+                    } );
+                    return false
+                }
+                return res;
+            },
+            
+            async drop( id ) {
+                if ( this.checkDropAccess () ) {
+                    await this.addNewElement ( id );
+                } else {
+                    const message = 'This element can`t be here';
+                    this.open ( message );
+                }
                 this.dropAction ();
             },
-            selectActiveElement( index ){
-                this.selectElement ( index )
+            
+            open( message ) {
+                this.message = message;
+                this.$refs.snackbar.open ();
+            },
+            
+            initDroppable(){
+                $ ( '#canvas' ).droppable ( {
+                    over   : ( event, ui ) => {
+                        $ ( event.toElement ).addClass ( 'highlight_drop' );
+                    },
+                    greedy : true,
+                    out    : ( event, ui ) => {
+                        $ ( event.target ).removeClass ( 'highlight_drop' );
+                    },
+                    drop   : ( event, ui ) => {
+                        const id = event.target.id;
+                        this.drop ( id, )
+                    }
+                } );
             }
+            
+        },
+        mounted(){
+            this.initDroppable ()
         },
         
-        created(){
+        created (){
             this.initCanvas ()
-        }
-        
+        },
     }
 
 </script>
@@ -76,9 +138,15 @@
         position: relative;
     }
     
+    .dropzone-canvas {
+        flex-wrap:  wrap;
+        box-shadow: 0 5px 5px -3px rgba(0, 0, 0, .2), 0 8px 10px 1px rgba(0, 0, 0, .14), 0 3px 14px 2px rgba(0, 0, 0, .12);
+    }
+    
     /* example styles */
     .container {
         overflow: hidden;
+        padding:  55px;
     }
     
     .block-wrapper {
@@ -95,6 +163,16 @@
     
     .preview {
         opacity: 0.5;
+    }
+    
+    .highlight_drop {
+        outline:        1px dashed #3f51b5;
+        outline-offset: -2px;
+    }
+    
+    .selected {
+        outline:        1px dashed rgba(255, 87, 34, 0.8);
+        outline-offset: 0;
     }
 
 </style>

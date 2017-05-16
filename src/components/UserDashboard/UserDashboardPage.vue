@@ -1,7 +1,13 @@
 <template>
     <div class="user-wrapper">
-        <sidebar></sidebar>
-        <router-view class="page-content" :class="{'sidenav-collapsed':sideNavCollapsed}"></router-view>
+        <sidebar-wrapper>
+            <router-view name="sidebar"></router-view>
+        </sidebar-wrapper>
+        <transition mode="out-in"
+                    enter-active-class="animated zoomIn"
+                    leave-active-class="animated zoomOut">
+            <router-view class="page-content" :class="{'sidenav-collapsed':sideNavCollapsed}"></router-view>
+        </transition>
         <vodal :show="showModal"
                animation="zoom"
                @hide="showModal = false"
@@ -17,18 +23,16 @@
 </template>
 
 <script>
-    import MyPresentations from '../containers/MyPresentations.vue'
-    import Sidebar from '../gui/Sidebar.vue'
     import { mapActions, mapGetters } from 'vuex';
     import Vodal from 'vodal';
     import Slides from '../containers/Slides.vue';
+    import SidebarWrapper from '../gui/SidebarWrapper.vue'
     
     export default{
         components : {
-            MyPresentations,
-            Sidebar,
             Vodal,
             Slides,
+            SidebarWrapper
         },
         data(){
             return {

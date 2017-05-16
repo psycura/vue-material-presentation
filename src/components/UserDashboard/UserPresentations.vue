@@ -80,7 +80,7 @@
     import SlidePreview from '../containers/SlidePreview.vue'
     import SubHeader from '../gui/SubHeader.vue'
     
-    export default{
+    export default {
         props      : [ 'title', 'presentations', 'mode' ],
         data(){
             return {
@@ -97,6 +97,8 @@
             ...mapGetters ( [
                 'userPresentations',
                 'currentSlides',
+                'currentPresentation',
+                'currentSlide'
             ] ),
         },
         components : {
@@ -114,7 +116,8 @@
                 'setPresentationToEdit',
                 'initState',
                 'addEmptyPresentation',
-                'deletePresentation'
+                'deletePresentation',
+                'setSlideToEdit'
             ] ),
             
             openPreview( index ){
@@ -123,12 +126,15 @@
                 .then ( () => {
                     this.$parent.openPreview ();
                 } )
-                
             },
             
             async editPresentation( index ){
                 await this.setPresentationToEdit ( this.userPresentations[ index ] );
-                this.$router.push ( { name : 'editor', params : { index } } );
+                await this.setSlideToEdit ( this.currentPresentation.slides[ 0 ] );
+                this.$router.push ( {
+                    name   : 'editSlides',
+                    params : { presentation : this.currentPresentation.name, slideIndex : this.currentSlide.id }
+                } )
             },
             
             removeFromCollection( id ){

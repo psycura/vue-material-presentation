@@ -1,6 +1,7 @@
 <template>
-    <md-list class="custom-list md-triple-line list">
+    <md-list class="md-triple-line">
         <md-list-item v-for="(item, index) in items"
+                      disabled
                       class="list-item"
                       :key="index"
                       :id="item.id">

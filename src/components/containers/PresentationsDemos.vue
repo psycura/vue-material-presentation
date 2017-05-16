@@ -17,26 +17,22 @@
                 </transition-group>
             </div>
         </div>
-
+    
     </div>
 </template>
 
 <script>
     import { mapActions, mapGetters } from 'vuex';
     import SlidePreview from '../containers/SlidePreview.vue'
-
-
-
-
-    export default{
+    
+    export default {
         props      : {
             limit : {
                 default : 999
             }
         },
         data(){
-            return {
-            }
+            return {}
         },
         computed   : {
             ...mapGetters ( [
@@ -46,11 +42,10 @@
         },
         components : {
             SlidePreview,
-
+            
         },
         
-        methods : {
-        },
+        methods : {},
         
     }
 

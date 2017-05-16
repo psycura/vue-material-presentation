@@ -1,7 +1,7 @@
 <template>
     <div>
         <div class="prop-label">
-            <span class="md-caption">{{propKey | kebabCase}}</span>
+            <span class="md-caption">{{propKey | trimPropKey |  kebabCase}}</span>
         </div>
         <div class="field">
             <div class="input-holder">
@@ -23,7 +23,7 @@
 </template>
 
 <script>
-    import { listOptions } from '../../components/styleOptions'
+    import { listOptions } from '../../blocks/styleOptions'
     
     export default{
         props    : [ 'prop', 'propKey' ],

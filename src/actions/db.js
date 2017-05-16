@@ -3,7 +3,6 @@ import store from '../store/store';
 import * as authActions from './auth';
 import * as _ from 'lodash';
 
-
 export async function updateUserStatus ( user ) {
     let status = {
         loggedIn : false,
@@ -61,7 +60,11 @@ export async function removeFromCollection ( key ) {
     }
 }
 
-export function updateUserPresentation ( id,presentation ) {
+export function updateUserPresentation ( presentation ) {
+    console.log(presentation);
+    // const newPres=_.cloneDeep(presentation);
+    // console.log('new ', newPres);
+    const id   = presentation.id;
     const user = authActions.getCurrentUser ();
     if ( user ) {
         dbRef.ref ( `/users/${user.uid}/userPresentations/${id}` ).set ( presentation );
@@ -71,9 +74,9 @@ export function updateUserPresentation ( id,presentation ) {
 export function updateUserPresentations ( userPresentations ) {
     const user = authActions.getCurrentUser ();
     if ( user ) {
-        let presentations={};
+        let presentations = {};
         _.forIn ( userPresentations, ( value, key ) => {
-            Object.assign(presentations,{[value.id]:value})
+            Object.assign ( presentations, { [value.id] : value } )
         } );
         dbRef.ref ( `/users/${user.uid}/userPresentations` ).set ( presentations );
     }
