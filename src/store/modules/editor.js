@@ -35,7 +35,8 @@ const state = {
         'General'     : true,
         'Dimensions'  : false,
         'Decorations' : false,
-        'Flex'        : false
+        'Flex'        : false,
+        'Typography'  : false
     },
     canvas
 };
@@ -48,7 +49,6 @@ const mutations = {
         slides.push ( slide );
         state.presentation.slides = slides;
     },
-    
     'SET_PRESENTATION'( state, presentation ){
         let slidesArray = [];
         
@@ -68,7 +68,6 @@ const mutations = {
         state.presentation.slides = slidesArray;
         state.currentSlide        = state.presentation.slides[ 0 ];
     },
-    
     'REMOVE_SLIDE'( state, index ){
         let slidesArray = state.presentation.slides;
         
@@ -76,11 +75,9 @@ const mutations = {
         state.presentation.slides = slidesArray;
         state.selectedElement     = null;
     },
-    
     'UPDATE_SLIDES'( state, slides ){
         state.presentation.slides = slides
     },
-    
     'SET_SLIDE_TO_EDIT'( state, slide ){
         state.slideBlocks = [];
         
@@ -89,17 +86,14 @@ const mutations = {
             state.slideBlocks.push ( value );
         } )
     },
-    
     'UPDATE_SLIDE_BLOCKS'( state, blocks ){
         state.slideBlocks             = blocks;
         state.currentSlide.components = state.slideBlocks;
     },
-    
     'START_DRAG_ACTION'( state, element ){
         state.draggedElement = _.cloneDeep ( components[ element ] );
         state.dragIsActive   = true;
     },
-    
     'ADD_NEW_ELEMENT'( state, containerId ){
         // console.log ( containerId );
         let id      = shortid.generate ();
@@ -146,11 +140,9 @@ const mutations = {
         state.dragIsActive            = false
         
     },
-    
     'INIT_CANVAS'( state ){
         state.canvas.styles = _.cloneDeep ( state.canvas.defaultStyles )
     },
-    
     'REMOVE_ELEMENT'( state, index ){
         let array = state.slideBlocks;
         // let array = state.currentSlide.components;
@@ -159,30 +151,26 @@ const mutations = {
         state.slideBlocks             = array;
         state.currentSlide.components = state.slideBlocks;
     },
-    
     'DROP_ACTION'( state ){
         state.selectedElement = null;
         state.draggedElement  = null;
         state.dragIsActive    = false;
     },
-    
     'SELECT_ELEMENT'( state, blockId ){
         // state.selectedElement = getObj ( state.currentSlide.components, blockId );
         state.selectedElement = getObj ( state.slideBlocks, blockId );
     },
-    
     'SELECT_CANVAS'( state ){
         state.selectedElement      = state.canvas;
         state.selectedElementIndex = 'canvas';
     },
-    
     'UPDATE_ELEMENT_PROPS'( state, props ){
-        // console.log ( props );
-        let { value, units, id } = props;
-        let valuePattern         = /\d+/g;
-        const val                = value.match ( valuePattern ) ? value.match ( valuePattern )[ 0 ] : value;
+        console.log ( props );
+        let { value, units, id, mainProp, propKey, subKey, layerIndex } = props;
         
-        let block = null;
+        let val       = null;
+        let block     = null;
+        let valuePath = null;
         
         if ( id === 'canvas' ) {
             block = state.canvas;
@@ -215,26 +203,178 @@ const mutations = {
             }
         }
         
-        if ( props.subKey ) {
-            block.styles[ props.mainProp ][ props.propKey ].options[ props.subKey ].value = value;
-            block.styles[ props.mainProp ][ props.propKey ].options[ props.subKey ].units = units;
+        if ( layerIndex >= 0 ) {
+            valuePath = block.styles[ mainProp ][ propKey ].stack[ layerIndex ].options[ value.propKey ];
+            units     = value.units;
+            value     = value.value;
+            
+        } else if ( subKey ) {
+            valuePath = block.styles[ mainProp ][ propKey ].options[ subKey ];
         } else {
-            block.styles[ props.mainProp ][ props.propKey ].value = val;
-            block.styles[ props.mainProp ][ props.propKey ].units = units;
+            valuePath = block.styles[ mainProp ][ propKey ];
         }
+        
+        if ( _.startsWith ( value, '#' ) ) {
+            val = value
+        } else {
+            let valuePattern = /\d+/g;
+            
+            val = value.match ( valuePattern ) ? value.match ( valuePattern )[ 0 ] : value;
+        }
+        
+        valuePath.value = val;
+        valuePath.units = units || '';
+        
         state.currentSlide.components = state.slideBlocks;
     },
     'TOGGLE_PROP_PANEL'( state, panel ){
         state.propPanelsState[ panel ] = !state.propPanelsState[ panel ]
     },
     'UPDATE_INNER_TEXT'( state, text ){
-        state.selectedElement.text = text;
+        if ( state.selectedElement ) {
+            state.selectedElement.text = text;
+        }
+    },
+    'ADD_PROP_STACK_LAYER'( state, propKey ){
+        propKey   = propKey.substring ( 3 );
+        let path  = null;
+        let stack = [];
+        let obj   = {};
+        switch ( propKey ) {
+            case 'textShadow':
+                path        = state.selectedElement.styles.typography[ '09_textShadow' ];
+                obj.options = {
+                    '01_xPosition' : {
+                        type     : 'input',
+                        value    : '0',
+                        units    : 'px',
+                        editable : true
+                    },
+                    '02_yPosition' : {
+                        type     : 'input',
+                        value    : '0',
+                        units    : 'px',
+                        editable : true
+                    },
+                    '03_blur'      : {
+                        type     : 'input',
+                        value    : '0',
+                        units    : 'px',
+                        editable : true
+                    },
+                    '04_color'     : {
+                        type     : 'picker',
+                        value    : '#000',
+                        editable : true
+                    }
+                };
+                break;
+            case 'boxShadow':
+                path        = state.selectedElement.styles.decorations[ '05_boxShadow' ];
+                obj.options = {
+                    '01_xPosition'  : {
+                        type     : 'input',
+                        value    : '0',
+                        units    : 'px',
+                        editable : true
+                    },
+                    '02_yPosition'  : {
+                        type     : 'input',
+                        value    : '0',
+                        units    : 'px',
+                        editable : true
+                    },
+                    '03_blur'       : {
+                        type     : 'input',
+                        value    : '0',
+                        units    : 'px',
+                        editable : true
+                    },
+                    '04_spread'     : {
+                        type     : 'input',
+                        value    : '0',
+                        units    : 'px',
+                        editable : true
+                    },
+                    '05_color'      : {
+                        type     : 'picker',
+                        value    : '#000',
+                        editable : true
+                    },
+                    '06_shadowType' : {
+                        type     : 'select',
+                        value    : '',
+                        editable : true
+                    }
+                };
+                break;
+            case 'background':
+                path        = state.selectedElement.styles.decorations[ '06_background' ];
+                obj.options = {
+                    '01_image'      : {
+                        type     : 'btn',
+                        value    : [],
+                        editable : true
+                    },
+                    '02_repeat'     : {
+                        type     : 'select',
+                        value    : 'no-repeat',
+                        editable : true
+                    },
+                    '03_position'   : {
+                        type     : 'select',
+                        value    : 'left top',
+                        editable : true
+                    },
+                    '04_attachment' : {
+                        type     : 'select',
+                        value    : 'scroll',
+                        editable : true
+                    },
+                    '05_size'       : {
+                        type     : 'select',
+                        value    : 'auto',
+                        editable : true
+                    }
+                };
+                break;
+            default:
+                break;
+        }
+        
+        stack = _.flatMap ( path.stack ) || [];
+        
+        stack.push ( obj );
+        path.stack = stack;
+        
+    },
+    'REMOVE_PROP_STACK_LAYER'( state, layerData ){
+        let propKey = layerData.propKey.substring ( 3 );
+        let path    = null;
+        let stack   = [];
+        switch ( propKey ) {
+            case 'textShadow':
+                path = state.selectedElement.styles.typography[ '09_textShadow' ];
+                break;
+            case 'boxShadow':
+                path = state.selectedElement.styles.decorations[ '05_boxShadow' ];
+                break;
+            case 'background':
+                path = state.selectedElement.styles.decorations[ '06_background' ];
+                break;
+            default:
+                break;
+        }
+        stack = _.flatMap ( path.stack );
+        stack.splice ( layerData.index, 1 );
+        path.stack = stack;
+        
     }
     
 };
 
 const actions = {
-    addSlide : ( { commit }, layout ) => {
+    addSlide              : ( { commit }, layout ) => {
         return new Promise ( resolve => {
             if ( layout === 'addSlide' ) {
                 const emptySlide = {
@@ -263,65 +403,66 @@ const actions = {
             }
         } )
     },
-    
     setPresentationToEdit : ( { commit }, presentation ) => {
         return new Promise ( resolve => {
             commit ( 'SET_PRESENTATION', presentation );
             resolve ();
         } )
     },
-    
-    removeSlide     : ( { commit }, index ) => {
+    removeSlide           : ( { commit }, index ) => {
         commit ( 'REMOVE_SLIDE', index )
     },
-    updateSlides    : ( { commit }, slides ) => {
+    updateSlides          : ( { commit }, slides ) => {
         commit ( 'UPDATE_SLIDES', slides )
     },
-    setSlideToEdit  : ( { commit }, slide ) => {
+    setSlideToEdit        : ( { commit }, slide ) => {
         return new Promise ( resolve => {
             commit ( 'SET_SLIDE_TO_EDIT', slide );
             resolve ();
         } )
     },
-    startDragAction : ( { commit }, element ) => {
+    startDragAction       : ( { commit }, element ) => {
         return new Promise ( ( resolve ) => {
             commit ( 'START_DRAG_ACTION', element );
             resolve ();
         } )
     },
-    
-    addNewElement : ( { commit }, container ) => {
+    addNewElement         : ( { commit }, container ) => {
         return new Promise ( ( resolve ) => {
             commit ( 'ADD_NEW_ELEMENT', container );
             resolve ();
         } )
     },
-    removeElement : ( { commit }, index ) => {
+    removeElement         : ( { commit }, index ) => {
         commit ( 'REMOVE_ELEMENT', index )
     },
-    dropAction    : ( { commit } ) => {
+    dropAction            : ( { commit } ) => {
         commit ( 'DROP_ACTION' )
     },
-    
-    selectElement      : ( { commit }, id ) => {
+    selectElement         : ( { commit }, id ) => {
         commit ( 'SELECT_ELEMENT', id )
     },
-    selectCanvas       : ( { commit } ) => {
+    selectCanvas          : ( { commit } ) => {
         commit ( 'SELECT_CANVAS' )
     },
-    updateElementProps : ( { commit }, props ) => {
+    updateElementProps    : ( { commit }, props ) => {
         commit ( 'UPDATE_ELEMENT_PROPS', props )
     },
-    initCanvas         : ( { commit } ) => {
+    initCanvas            : ( { commit } ) => {
         commit ( 'INIT_CANVAS' )
     },
-    togglePropPanel    : ( { commit }, panel ) => {
+    togglePropPanel       : ( { commit }, panel ) => {
         commit ( 'TOGGLE_PROP_PANEL', panel )
     },
-    updateInnerText    : ( { commit }, text ) => {
+    updateInnerText       : ( { commit }, text ) => {
         commit ( 'UPDATE_INNER_TEXT', text )
+    },
+    addLayer              : ( { commit }, propKey ) => {
+        commit ( 'ADD_PROP_STACK_LAYER', propKey )
+    },
+    removePropLayer       : ( { commit }, layerData ) => {
+        commit ( 'REMOVE_PROP_STACK_LAYER', layerData )
     }
-    
 };
 
 const getters = {
@@ -334,31 +475,25 @@ const getters = {
     currentSlide( state ){
         return state.currentSlide
     },
-    
     dragIsActive( state ){
         return state.dragIsActive;
     },
-    
     draggedElement( state ){
         return state.draggedElement;
     },
-    
     selectedElement( state ){
         return state.selectedElement;
     },
-    
     activeElementStyles( state ){
         if ( state.selectedElement ) {
             return state.selectedElement.styles
         }
     },
-    
     slideBlocks( state ){
         return state.slideBlocks
         
         
     },
-    
     canvasStyles( state ){
         let styles = {};
         _.forEach ( state.canvas.styles, ( value ) => {
@@ -379,24 +514,18 @@ const getters = {
         } );
         return styles
     },
-    
-    getElement : state => id => {
+    getElement   : state => id => {
         return getObj ( state.slideBlocks, id )
     },
-    
     propPanelsState( state ){
         return state.propPanelsState;
     },
-    
     getInnerText : state => id => {
-        console.log ( id );
         const obj = getObj ( state.slideBlocks, id );
-        console.log ( obj );
         if ( obj.name === 'TextField' ) {
             return obj.text
         }
-    }
-    
+    },
 };
 
 export default {

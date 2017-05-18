@@ -1,7 +1,7 @@
 <template>
-    <div>
+    <div class="property-item">
         <div class="prop-label">
-            <span class="md-caption">{{propKey | trimPropKey |  kebabCase}}</span>
+            <span class="md-caption">{{propKey | trimPropKey | kebabCase}}</span>
         </div>
         <div class="field picker" :class="active &&' active'">
             <div class="input-holder">
@@ -15,7 +15,7 @@
                 </div>
             </div>
         </div>
-        <div class="picker-wrapper">
+        <div class="picker-wrapper" :class="isLeftPlaced">
             <transition enter-active-class="animated fadeInDown"
                         leave-active-class="animated fadeOutUp"
                         move="moved"
@@ -34,8 +34,8 @@
 <script>
     import * as colorPicker from 'vue-color'
     
-    export default{
-        props      : [ 'prop', 'propKey' ],
+    export default {
+        props    : [ 'prop', 'propKey' ],
         data(){
             return {
                 pickerIsOpen : false,
@@ -43,6 +43,12 @@
                 active       : false,
             }
         },
+        computed : {
+            isLeftPlaced(){
+                return this.propKey === '05_color' ? ' left' : ''
+            }
+        },
+        
         components : {
             'chrome-picker' : colorPicker.Chrome,
         },
@@ -72,13 +78,22 @@
                 }
                 
             },
-            
+        },
+        
+        created(){
+            console.log ( 'picker ', this.propKey );
         }
     }
 
 </script>
 
 <style lang="scss" scoped>
+    .property-item {
+        width:         100%;
+        margin-bottom: 5px;
+        padding:       0 5px;
+    }
+    
     .field {
         border:        1px solid rgba(0, 0, 0, .1);
         border-radius: 2px;
@@ -136,7 +151,7 @@
     
     .picker-wrapper {
         overflow: hidden;
-        width:    200%;
+        width:    100%;
         
     }
     
@@ -148,13 +163,30 @@
         
         .picker-wrapper {
             overflow:  hidden;
-            width:     263%;
-            transform: translate3d(-63%, 10%, 0);
+            width:     100%;
+            transform: translate3d(0, 10%, 0);
         }
         
         .picker {
             &.active {
                 transform: translateY(20px);
+            }
+        }
+    }
+    
+    .stack-layer {
+        .property-item {
+            width:         50%;
+            margin-bottom: 5px;
+            padding:       0 5px;
+            
+            .picker-wrapper {
+                transform: translate3d(-103px, 5px, 0px) !important;
+                width:     209% !important;
+                
+                &.left{
+                    transform: translate3d(0px, 5px, 0px) !important;
+                }
             }
         }
     }

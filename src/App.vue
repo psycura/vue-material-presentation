@@ -76,6 +76,7 @@
     @import "../node_modules/vodal/rotate.css";
     @import "../node_modules/vodal/door.css";
     @import "../node_modules/vodal/fade.css";
+    @import "../node_modules/vodal/slide-down.css";
     @import "../node_modules/vodal/zoom.css";
     @import "../node_modules/jquery-ui/themes/base/all.css";
     @import "../node_modules/medium-editor/dist/css/medium-editor.min.css";

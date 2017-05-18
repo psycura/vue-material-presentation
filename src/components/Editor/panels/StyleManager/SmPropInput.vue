@@ -1,24 +1,29 @@
 <template>
-    <div>
+    <div class="property-item">
         <div class="prop-label">
-            <span class="md-caption">{{propKey | trimPropKey |  kebabCase}}</span>
+            <span class="md-caption">{{propKey | trimPropKey | kebabCase}}</span>
         </div>
         <div class="field">
         <span class="input-holder">
-            <input v-model="prop.value"
-                   @change="emitData($event.target.value)"
+            <input v-model="value"
+                   @change="emitData"
                    class="field-select">
         </span>
             <span class="field-units">
             <select name="units" class="input-unit"
-                    v-model="prop.units">
-               <option value="px">px</option>
-               <option value="%">%</option>
+                    @change="emitData"
+                    v-model="units">
+               <option>px</option>
+               <option>%</option>
             </select>
         </span>
             <div class="field-arrows">
-                <div class="field-arrow-u" @click="changeValue(1)"></div>
-                <div class="field-arrow-d" @click="changeValue(-1)"></div>
+                <div class="arrow-wrapper" @click="changeValue(1)">
+                    <div class="field-arrow-u"></div>
+                </div>
+                <div class="arrow-wrapper" @click="changeValue(-1)">
+                    <div class="field-arrow-d"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -26,21 +31,28 @@
 
 <script>
     
-    export default{
+    export default {
+        data(){
+            return {
+                units : this.prop.units,
+                value : this.prop.value
+            }
+        },
         props   : [ 'prop', 'propKey' ],
         methods : {
-            emitData( value ){
+            emitData(){
                 const data = {
-                    value,
+                    value   : this.value,
                     propKey : this.propKey,
-                    units   : this.prop.units
+                    units   : this.units
                 };
                 this.$emit ( 'updateValue', data )
             },
             
             changeValue( val ){
-                const newVal = _.parseInt ( this.prop.value ) + val;
-                this.emitData ( newVal.toString() );
+                const newVal = _.parseInt ( this.value ) + val;
+                this.value   = newVal.toString ();
+                this.emitData ();
             },
             
         }
@@ -49,6 +61,12 @@
 </script>
 
 <style lang="scss" scoped>
+    .property-item {
+        width:         50%;
+        margin-bottom: 5px;
+        padding:       0 5px;
+    }
+    
     .field {
         border:        1px solid rgba(0, 0, 0, .1);
         border-radius: 2px;
@@ -121,6 +139,12 @@
         right:    0;
         top:      0;
         width:    9px;
+        
+        .arrow-wrapper {
+            height: 50%;
+            width:  100%;
+            
+        }
         
         .field-arrow-u {
             position:      absolute;

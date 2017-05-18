@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="property-item">
         <div class="prop-label">
             <span class="md-caption">{{propKey | trimPropKey |  kebabCase}}</span>
         </div>
@@ -46,6 +46,12 @@
 </script>
 
 <style lang="scss" scoped>
+    .property-item {
+        width:         50%;
+        margin-bottom: 5px;
+        padding:       0 5px;
+    }
+    
     .field {
         border:        1px solid rgba(0, 0, 0, .1);
         border-radius: 2px;

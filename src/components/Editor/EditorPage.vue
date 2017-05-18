@@ -88,6 +88,7 @@
 
             async saveChanges(){
 //                await dbActions.updateDemoPresentation ( this.id, this.currentPresentation );
+                console.log('before ',this.currentPresentation);
                 await dbActions.updateUserPresentation ( this.id, this.currentPresentation );
                 this.message = 'Presentation saved successfully';
                 this.open ();

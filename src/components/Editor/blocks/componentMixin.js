@@ -9,7 +9,6 @@ const componentMixin = {
         ] ),
         
         selectActiveElement(  ){
-            console.log(this.id);
             this.selectElement ( this.id )
         },
     },

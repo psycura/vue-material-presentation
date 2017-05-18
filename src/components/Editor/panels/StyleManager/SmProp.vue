@@ -8,16 +8,13 @@
         </div>
         <div v-show='propPanelsState[title]' class="md-list-item-expand">
             <div class="properties ">
-                <div class="property-item"
-                     :class="prop.type==='composite'&&' composite'"
-                     :key="prop"
-                     v-for="prop,key in propObj">
-                    <component :is="`sm-${prop.type}`" :prop="prop"
-                               v-if="prop.editable"
-                               :propKey="key"
-                               @updateValue="emitData($event)">
-                    </component>
-                </div>
+                <component :key="prop"
+                           v-for="prop,key in propObj"
+                           :is="`sm-${prop.type}`"
+                           :prop="prop"
+                           :propKey="key"
+                           @updateValue="emitData($event)">
+                </component>
             </div>
         </div>
     </li>
@@ -28,6 +25,8 @@
     import SmPropPicker from './SmPropPicker.vue'
     import SmPropInput from './SmPropInput.vue'
     import SmPropComposite from './SmPropComposite.vue'
+    import SmPropRadio from './SmPropRadio.vue'
+    import SmPropStack from './SmPropStack.vue'
     import { mapActions, mapGetters } from 'vuex';
     
     export default {
@@ -43,7 +42,9 @@
             smSelect    : SmPropSelect,
             smPicker    : SmPropPicker,
             smInput     : SmPropInput,
-            smComposite : SmPropComposite
+            smComposite : SmPropComposite,
+            smRadio     : SmPropRadio,
+            smStack     : SmPropStack,
         },
         
         methods : {
@@ -95,13 +96,17 @@
     }
     
     .prop-panel-head {
-        /*cursor:         pointer;*/
+        cursor:         pointer;
         display:        flex;
         flex-direction: row;
         align-items:    center;
         width:          100%;
         min-height:     48px;
         padding:        0 16px;
+        
+        &:hover{
+            background: hsla(0, 0%, 60%, .2);
+        }
         
         .md-icon {
             transition: all .4s cubic-bezier(.25, .8, .25, 1);
@@ -110,13 +115,14 @@
         .panel-head-icon {
             margin-right: 10px;
         }
+        
     }
     
     .md-list-item-expand {
         flex-flow:  column wrap;
         overflow:   hidden;
         transform:  translate3D(0, 0, 0);
-        width:100%;
+        width:      100%;
         
         transition: all .4s cubic-bezier(.25, .8, .25, 1);
         
@@ -174,7 +180,8 @@
         }
         
         &:hover {
-            background: hsla(0, 0%, 60%, .2);
+            /*background: hsla(0, 0%, 60%, .2);*/
+            cursor: default;
         }
         
     }

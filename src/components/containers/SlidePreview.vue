@@ -44,7 +44,6 @@
     import * as dbActions from '../../actions/db';
     import Vodal from 'vodal';
     import Slides from './Slides.vue'
-    import * as _ from 'lodash';
     
     export default{
         props      : {

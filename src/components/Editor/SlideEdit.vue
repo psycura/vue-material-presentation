@@ -12,6 +12,12 @@
         <md-snackbar :md-position="vertical + ' ' + horizontal" ref="snackbar" :md-duration="duration">
             <span>{{message}}</span>
         </md-snackbar>
+        <vodal :show="showImageManager"
+               animation="zoom"
+               @hide="toggleImageManager(false)"
+               :width="850" :height="461" measure="px">
+            <image-manager></image-manager>
+        </vodal>
     </div>
 </template>
 
@@ -21,11 +27,18 @@
     import DynamicBlock from './blocks/DynamicBlock.vue';
     import $ from 'jquery'
     import jquery_ui from 'jqueryui/'
+    import * as dbActions from '../../actions/db';
+    import * as storageActions from '../../actions/storage';
+    import ImageManager from './panels/StyleManager/ImageManager.vue'
+
+    import Vodal from 'vodal'
     
     export default {
         components : {
             slide : DynamicSlide,
-            block : DynamicBlock
+            block : DynamicBlock,
+            Vodal,
+            ImageManager
         },
         data () {
             return {
@@ -45,7 +58,8 @@
                 'canvasStyles',
                 'getElement',
                 'draggedElement',
-                'selectedElement'
+                'selectedElement',
+                'showImageManager'
             ] ),
             
             isSelected(){
@@ -69,7 +83,8 @@
                 'selectElement',
                 'initCanvas',
                 'selectCanvas',
-                'toggleSubheader'
+                'toggleSubheader',
+                'toggleImageManager'
             ] ),
             
             checkDropAccess(){

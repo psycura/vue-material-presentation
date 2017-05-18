@@ -6,7 +6,8 @@ const state = {
         visible : false,
         title   : null,
         link    : null
-    }
+    },
+    showImageManager : false,
 };
 
 const mutations = {
@@ -19,6 +20,9 @@ const mutations = {
     },
     'TOGGLE_SUBHEADER'( state, status ){
         state.subheader = status;
+    },
+    'TOGGLE_IMAGE_MANAGER'( state, status ){
+        state.showImageManager = status;
     }
 };
 
@@ -34,6 +38,10 @@ const actions = {
     },
     toggleSubheader : ( { commit }, status ) => {
         commit ( 'TOGGLE_SUBHEADER', status );
+    },
+    
+    toggleImageManager : ( { commit }, status ) => {
+        commit ( 'TOGGLE_IMAGE_MANAGER', status );
     }
 };
 
@@ -49,6 +57,9 @@ const getters = {
     },
     subheader( state ){
         return state.subheader;
+    },
+    showImageManager( state ){
+        return state.showImageManager;
     }
 };
 

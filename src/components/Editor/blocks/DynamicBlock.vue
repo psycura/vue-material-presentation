@@ -64,20 +64,36 @@
                 _.forEach ( this.component.styles, ( value ) => {
                     _.forIn ( value, ( item, itemKey ) => {
                         let key = itemKey.substring ( 3 );
-                        if ( item.value ) {
-                            styles[ key ] = item.value + (item.units || '');
-                        } else {
-                            _.forIn ( item.options, ( subItem ) => {
-                                styles[ key ]
-                                    ?
-                                    styles[ key ] = styles[ key ] + subItem.value + (subItem.units || '') + ' '
-                                    :
-                                    styles[ key ] = subItem.value + (subItem.units || '') + ' ';
-                            } )
+                        switch ( item.type ) {
+                            case 'composite':
+                                setStyleOptions ( item.options, key );
+                                break;
+                            case 'stack':
+                                _.forIn ( item.stack, ( subItem, index ) => {
+                                    if ( index > 0 ) {
+                                        styles[ key ] = styles[ key ] + ','
+                                    }
+                                    setStyleOptions ( subItem.options, key );
+                                } );
+                                break;
+                            default:
+                                styles[ key ] = item.value + (item.units || '');
+                                break;
                         }
                     } )
                 } );
-                return styles
+//                console.log ( styles );
+                return styles;
+                
+                function setStyleOptions ( obj, key ) {
+                    _.forIn ( obj, ( option ) => {
+                        styles[ key ]
+                            ?
+                            styles[ key ] = styles[ key ] + option.value + (option.units || '') + ' '
+                            :
+                            styles[ key ] = option.value + (option.units || '') + ' ';
+                    } );
+                }
             },
         },
         
@@ -100,7 +116,6 @@
                 
                 if ( draggedEl.dropTarget !== '*' ) {
                     _.forEach ( draggedEl.dropTarget, ( value ) => {
-                        console.log ( value, targetName );
                         if ( value === targetName ) {
                             res = true;
                             return
@@ -108,7 +123,6 @@
                             res = false
                         }
                     } );
-                    console.log ( res );
                     return res;
                 }
                 if ( block.accept !== '*' ) {
@@ -161,14 +175,14 @@
                 let dataWidth  = {
                     value    : width,
                     propKey  : '01_width',
-                    units    : 'px',
+                    units    : width.indexOf ( 'px' ) > 0 ? 'px' : '%',
                     mainProp : 'dimensions',
                     id
                 };
                 let dataHeight = {
                     value    : height,
                     propKey  : '02_height',
-                    units    : 'px',
+                    units    : height.indexOf ( 'px' ) > 0 ? 'px' : '%',
                     mainProp : 'dimensions',
                     id
                 };
@@ -187,8 +201,6 @@
                 autoHide    : true,
                 containment : "parent"
             } );
-            console.log ( id );
-            
         }
         
     }
@@ -203,7 +215,8 @@
         
         &:hover {
             z-index:    2;
-            box-shadow: 0 5px 5px -3px rgba(0, 0, 0, .2), 0 8px 10px 1px rgba(0, 0, 0, .14), 0 3px 14px 2px rgba(0, 0, 0, .12);
+            outline:        1px dashed #3f51b5;
+            outline-offset: 0px;
         }
         
     }

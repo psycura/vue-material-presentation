@@ -67,6 +67,7 @@
             },
     
             savePresentation(){
+                console.log('before ', this.currentPresentation);
                 dbActions.updateUserPresentation ( this.currentPresentation );
                 this.openMessage ( 'Collection saved successfully' )
             },

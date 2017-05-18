@@ -53,9 +53,9 @@ const components = {
             dimensions  : {
                 
                 '01_width'   : {
-                    value    : '360',
+                    value    : '100',
                     type     : 'input',
-                    units    : 'px',
+                    units    : '%',
                     editable : true
                     
                 },
@@ -203,6 +203,16 @@ const components = {
                             
                         }
                     }
+                },
+                '05_boxShadow'       : {
+                    stack    : [],
+                    type     : 'stack',
+                    editable : true
+                },
+                '06_background'      : {
+                    type     : 'stack',
+                    stack    : [],
+                    editable : true
                 }
             }
         },
@@ -414,6 +424,16 @@ const components = {
                             
                         }
                     }
+                },
+                '05_boxShadow'       : {
+                    stack    : [],
+                    type     : 'stack',
+                    editable : true
+                },
+                '06_background'      : {
+                    type     : 'stack',
+                    stack    : [],
+                    editable : true
                 }
             }
         },
@@ -625,6 +645,16 @@ const components = {
                             
                         }
                     }
+                },
+                '05_boxShadow'       : {
+                    stack    : [],
+                    type     : 'stack',
+                    editable : true
+                },
+                '06_background'      : {
+                    type     : 'stack',
+                    stack    : [],
+                    editable : true
                 }
             }
         }
@@ -768,12 +798,6 @@ const components = {
                 },
             },
             decorations : {
-                '01_color'           : {
-                    value    : '#000',
-                    type     : 'picker',
-                    editable : true
-                    
-                },
                 '02_backgroundColor' : {
                     value    : 'transparent',
                     type     : 'picker',
@@ -836,6 +860,16 @@ const components = {
                             
                         }
                     }
+                },
+                '05_boxShadow'       : {
+                    stack    : [],
+                    type     : 'stack',
+                    editable : true
+                },
+                '06_background'      : {
+                    type     : 'stack',
+                    stack    : [],
+                    editable : true
                 }
             },
             typography  : {
@@ -851,7 +885,7 @@ const components = {
                     units    : 'px'
                 },
                 '03_fontWeight'     : {
-                    value    : 'normal',
+                    value    : '400',
                     type     : 'select',
                     editable : true
                 },
@@ -882,7 +916,7 @@ const components = {
                     type     : 'radio',
                     editable : true
                 },
-                '09_textShadow' : {
+                '09_textShadow'     : {
                     stack    : [],
                     type     : 'stack',
                     editable : true

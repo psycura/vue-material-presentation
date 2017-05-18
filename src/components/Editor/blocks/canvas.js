@@ -91,6 +91,11 @@ const canvas = {
                         
                     }
                 }
+            },
+            '06_background'      : {
+                type     : 'stack',
+                stack    : [],
+                editable : true
             }
         },
         flex        : {

@@ -1,18 +1,16 @@
 <template>
-    <div>
+    <div class="property-item composite">
         <div class="prop-label">
             <span class="md-caption">{{propKey | trimPropKey | kebabCase}}</span>
         </div>
         <div class="field composite">
             <div class="input-holder">
                 <div class="properties">
-                    <div class="property-item" v-for="property,subKey in prop.options" :key="property">
-                        
-                        <component :is="`sm-${property.type}`" :prop="property"
-                                   :propKey="subKey"
-                                   @updateValue="emitSubData($event)">
-                        </component>
-                    </div>
+                    <component :is="`sm-${property.type}`" :prop="property"
+                               v-for="property,subKey in prop.options" :key="property"
+                               :propKey="subKey"
+                               @updateValue="emitSubData($event)">
+                    </component>
                 </div>
             </div>
         </div>
@@ -45,8 +43,9 @@
                 this.$emit ( 'updateValue', data )
                 
             },
-            
-        }
+        },
+    
+        
     }
 
 </script>

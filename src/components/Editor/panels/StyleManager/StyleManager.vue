@@ -29,6 +29,13 @@
                      :key="selectedElement"
                      icon="aspect_ratio">
             </sm-prop>
+            <sm-prop title="Typography"
+                     v-if="activeElementStyles.typography"
+                     @updateValue="dataReceived('typography', $event)"
+                     :propObj="activeElementStyles.typography"
+                     :key="selectedElement"
+                     icon="text_fields">
+            </sm-prop>
             <sm-prop title="Decorations"
                      v-if="activeElementStyles.decorations"
                      @updateValue="dataReceived('decorations', $event)"

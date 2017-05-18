@@ -18,6 +18,8 @@
                          md-with-hover>
                     <md-card-area>
                         <md-card-content @click.native="selectSlide(slide)">
+                            <span class="slide-title">Slide #{{index + 1}}</span>
+    
                             <md-button class="md-icon-button  md-dense" @click.native="remove(index)">
                                 <md-icon>close</md-icon>
                             </md-button>
@@ -157,6 +159,12 @@
     .active-slide {
         border: 1px solid red;
         
+    }
+    
+    .slide-title{
+        position: absolute;
+        top: 5px;
+        left: 7px;
     }
     
     .slide-preview {
