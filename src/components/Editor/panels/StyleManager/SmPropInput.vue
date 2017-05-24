@@ -17,11 +17,11 @@
                <option>%</option>
             </select>
         </span>
-            <div class="field-arrows">
-                <div class="arrow-wrapper" @click="changeValue(1)">
+            <div class="field-arrows" @mousedown="mouseDownHandler">
+                <div class="arrow-wrapper" @click.stop="changeValue(1)">
                     <div class="field-arrow-u"></div>
                 </div>
-                <div class="arrow-wrapper" @click="changeValue(-1)">
+                <div class="arrow-wrapper" @click.stop="changeValue(-1)">
                     <div class="field-arrow-d"></div>
                 </div>
             </div>
@@ -30,12 +30,14 @@
 </template>
 
 <script>
+    import $ from 'jquery'
     
     export default {
         data(){
             return {
-                units : this.prop.units,
-                value : this.prop.value
+                units   : this.prop.units,
+                value   : this.prop.value,
+                pressed : false
             }
         },
         props   : [ 'prop', 'propKey' ],
@@ -47,6 +49,30 @@
                     units   : this.units
                 };
                 this.$emit ( 'updateValue', data )
+            },
+            
+            mouseDownHandler(){
+                let event    = window.event;
+                let mousePos = event.clientY;
+                
+                this.pressed = true;
+                
+                if ( this.pressed ) {
+                    $ ( '.md-content' ).mousemove ( ( e ) => {
+                        let newPos = e.pageY;
+                        let value  = mousePos - newPos;
+                        this.changeValue ( value );
+                        mousePos = newPos;
+                    } ).mouseup ( () => {
+                        this.mouseUpHandler ()
+                    } );
+                }
+                
+            },
+            
+            mouseUpHandler(){
+                this.pressed = false;
+                $ ( '.md-content' ).unbind ()
             },
             
             changeValue( val ){
@@ -133,7 +159,7 @@
     
     .field-arrows {
         z-index:  10;
-        /*cursor:   ns-resize;*/
+        cursor:   ns-resize;
         height:   100%;
         position: absolute;
         right:    0;

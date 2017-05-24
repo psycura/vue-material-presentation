@@ -1,16 +1,19 @@
 <template>
-    <component :style="elementStyles"
-               class="target-wrapper resizable"
-               :class="isSelected"
-               v-resize="resizeHandler"
-               :id="component.id"
-               :key="component.id"
-               :is="component.name">
-        <dynamic-block v-for="child, childIndex in component.children"
-                       v-if="childrenLength>0"
-                       :component="child" :key="child.id">
-        </dynamic-block>
-    </component>
+    <keep-alive>
+        <component :style="elementStyles"
+                   class="target-wrapper resizable component"
+                   :class="isSelected"
+                   v-resize="resizeHandler"
+                   :id="component.id"
+                   :is="component.name">
+            <keep-alive>
+                <dynamic-block v-for="child, childIndex in component.children"
+                               v-if="childrenLength>0"
+                               :component="child" :key="child.id">
+                </dynamic-block>
+            </keep-alive>
+        </component>
+    </keep-alive>
 </template>
 
 <script>
@@ -24,6 +27,14 @@
     export default {
         name       : 'DynamicBlock',
         props      : [ 'component' ],
+        data(){
+            return {
+                message    : '',
+                vertical   : 'bottom',
+                horizontal : 'center',
+                duration   : 4000,
+            }
+        },
         components : {
             List              : componentsList.List,
             Container         : componentsList.Container,
@@ -35,7 +46,6 @@
         },
         computed   : {
             ...mapGetters ( [
-                'slideBlocks',
                 'selectedElement',
                 'draggedElement',
                 'dragIsActive',
@@ -59,9 +69,13 @@
                 }
             },
             
+            componentStyles(){
+                return this.component.styles
+            },
+            
             elementStyles(){
                 let styles = {};
-                _.forEach ( this.component.styles, ( value ) => {
+                _.forEach ( this.componentStyles, ( value ) => {
                     _.forIn ( value, ( item, itemKey ) => {
                         let key = itemKey.substring ( 3 );
                         switch ( item.type ) {
@@ -82,17 +96,23 @@
                         }
                     } )
                 } );
-//                console.log ( styles );
+//                console.log('block styles', styles);
                 return styles;
                 
                 function setStyleOptions ( obj, key ) {
-                    _.forIn ( obj, ( option ) => {
-                        styles[ key ]
-                            ?
-                            styles[ key ] = styles[ key ] + option.value + (option.units || '') + ' '
-                            :
-                            styles[ key ] = option.value + (option.units || '') + ' ';
-                    } );
+                    if ( (key === 'background' && obj[ '01_image' ].value) || (key !== 'background') ) {
+                        _.forIn ( obj, ( option, subKey ) => {
+                            if ( subKey === '05_size' ) {
+                                styles.backgroundSize = option.value
+                            } else {
+                                styles[ key ]
+                                    ?
+                                    styles[ key ] = styles[ key ] + option.value + (option.units || '') + ' '
+                                    :
+                                    styles[ key ] = option.value + (option.units || '') + ' ';
+                            }
+                        } );
+                    }
                 }
             },
         },
@@ -104,7 +124,7 @@
                 'selectElement',
                 'addNewElement',
                 'dropAction',
-            
+                'setMessage'
             ] ),
             
             checkDropAccess( id ){
@@ -143,7 +163,8 @@
                     await this.addNewElement ( id );
                 } else {
                     const message = 'This element can`t be here';
-                    this.$parent.open ( message );
+//                    this.$parent.open ( message );
+                    this.setMessage ( message );
                 }
                 this.dropAction ();
             },
@@ -163,9 +184,15 @@
                     }
                 } );
             },
-            
-            removeHandle(){
-                this.removeElement ( this.index )
+    
+            initSortable(){
+                const id = this.component.id;
+    
+                $ ( `#${id}` ).sortable ( {
+                    sort : ( event, ui ) => {
+                        console.log ( 'sort', event, ui );
+                    }
+                } )
             },
             
             resizeHandler( data ){
@@ -195,31 +222,38 @@
         mounted(){
             if ( this.component.container ) {
                 this.initDroppable ();
+//                this.initSortable ();
             }
             const id = this.component.id;
             $ ( `#${id}` ).resizable ( {
                 autoHide    : true,
                 containment : "parent"
             } );
-        }
+        },
+
+//        watch : {
+//            componentStyles : function ( event ) {
+//                console.log ( 'componentStyles changed' );
+//            }
+//        }
         
     }
 
 </script>
 
 <style lang="scss" scoped>
-    .target-wrapper {
-        cursor:              pointer;
-        transition:          all .4s cubic-bezier(.25, .8, .25, 1);
-        transition-property: box-shadow;
-        
-        &:hover {
-            z-index:    2;
-            outline:        1px dashed #3f51b5;
-            outline-offset: 0px;
-        }
-        
-    }
+    /*.target-wrapper {*/
+        /*cursor:              pointer;*/
+        /*transition:          all .4s cubic-bezier(.25, .8, .25, 1);*/
+        /*transition-property: box-shadow;*/
+        /**/
+        /*&:hover {*/
+            /*z-index:        2;*/
+            /*outline:        1px dashed #3f51b5;*/
+            /*outline-offset: 0px;*/
+        /*}*/
+        /**/
+    /*}*/
     
     .selected {
         outline:        1px dashed rgba(255, 87, 34, 0.8);

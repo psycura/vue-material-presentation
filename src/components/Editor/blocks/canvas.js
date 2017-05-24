@@ -1,6 +1,8 @@
 const canvas = {
     name          : 'Canvas',
-    id            : 'canvas',
+    container     : true,
+    accept        : '*',
+    children      : [],
     styles        : {},
     defaultStyles : {
         general     : {
@@ -8,7 +10,6 @@ const canvas = {
                 value    : 'flex',
                 type     : 'select',
                 editable : true
-                
             },
         },
         dimensions  : {
@@ -26,7 +27,7 @@ const canvas = {
                 editable : false
                 
             },
-            '03_paddings' : {
+            '03_padding' : {
                 type    : 'composite',
                 options : {
                     '31_top'    : {
@@ -68,7 +69,7 @@ const canvas = {
                 editable : true
                 
             },
-            '02_border'          : {
+            '04_border'          : {
                 type    : 'composite',
                 options : {
                     '21_borderWidth' : {
@@ -78,7 +79,7 @@ const canvas = {
                         editable : true
                         
                     },
-                    '22_borderStyle' : {
+                    '42_borderStyle' : {
                         type     : 'select',
                         value    : 'solid',
                         editable : true
@@ -88,7 +89,6 @@ const canvas = {
                         type     : 'picker',
                         value    : '#ccc',
                         editable : true
-                        
                     }
                 }
             },

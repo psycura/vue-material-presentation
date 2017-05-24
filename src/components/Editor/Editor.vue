@@ -3,7 +3,7 @@
         <md-layout md-flex="85" md-gutter
                    md-column
                    class="canvas">
-            <slide-edit></slide-edit>
+            <slide-edit :canvas="getCanvas"></slide-edit>
         </md-layout>
         
         <md-layout md-flex="15" md-gutter
@@ -22,26 +22,32 @@
     import SlideEdit from './SlideEdit.vue'
     import { mapActions, mapGetters } from 'vuex';
     
-    export default{
+    export default {
         data(){
-            return{
+            return {
                 message    : '',
                 vertical   : 'bottom',
                 horizontal : 'center',
                 duration   : 4000,
                 index      : null,
-                id         : null
+                id         : null,
             }
         },
         components : {
             panelViews : Views,
             slideEdit  : SlideEdit
         },
-        methods    : {
+        computed   : {
+            ...mapGetters ( [
+                'getCanvas'
+            ] )
+        },
+        
+        methods : {
             ...mapActions ( [
                 'toggleSubheader'
             ] ),
-    
+            
             open( message ) {
                 if ( message ) {
                     this.message = message;
@@ -76,7 +82,7 @@
                 visible : false
             };
             await this.toggleSubheader ( subheaderStatus );
-            next()
+            next ()
         }
     }
 
@@ -92,7 +98,7 @@
     
     .canvas {
         background: white;
-        padding:    5px;
+        /*padding:    5px;*/
     }
     
     .panel-view {

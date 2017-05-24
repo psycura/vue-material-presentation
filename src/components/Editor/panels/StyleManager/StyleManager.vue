@@ -7,39 +7,44 @@
             <div class="block-info">
                 <md-chip class="md-accent">{{selectedElement.name}}</md-chip>
                 <md-chip v-if="selectedElement.id">{{selectedElement.id}}</md-chip>
+                <md-button v-if="!isCanvasSelected"
+                           @click.native="removeElement"
+                           class="md-icon-button md-accent delete-button">
+                    <md-icon>close</md-icon>
+                </md-button>
             </div>
             <sm-prop title="General"
-                     v-if="activeElementStyles.general"
+                     v-if="selectedElement.styles.general"
                      @updateValue="dataReceived('general', $event)"
-                     :propObj="activeElementStyles.general"
+                     :propObj="selectedElement.styles.general"
                      :key="selectedElement"
                      icon="view_compact">
             </sm-prop>
             <sm-prop title="Flex"
-                     v-if="isFlex&&activeElementStyles.flex"
+                     v-if="isFlex&&selectedElement.styles.flex"
                      @updateValue="dataReceived('flex', $event)"
-                     :propObj="activeElementStyles.flex"
+                     :propObj="selectedElement.styles.flex"
                      :key="selectedElement"
                      icon="image_aspect_ratio">
             </sm-prop>
             <sm-prop title="Dimensions"
-                     v-if="activeElementStyles.dimensions"
+                     v-if="selectedElement.styles.dimensions"
                      @updateValue="dataReceived('dimensions', $event)"
-                     :propObj="activeElementStyles.dimensions"
+                     :propObj="selectedElement.styles.dimensions"
                      :key="selectedElement"
                      icon="aspect_ratio">
             </sm-prop>
             <sm-prop title="Typography"
-                     v-if="activeElementStyles.typography"
+                     v-if="selectedElement.styles.typography"
                      @updateValue="dataReceived('typography', $event)"
-                     :propObj="activeElementStyles.typography"
+                     :propObj="selectedElement.styles.typography"
                      :key="selectedElement"
                      icon="text_fields">
             </sm-prop>
             <sm-prop title="Decorations"
-                     v-if="activeElementStyles.decorations"
+                     v-if="selectedElement.styles.decorations"
                      @updateValue="dataReceived('decorations', $event)"
-                     :propObj="activeElementStyles.decorations"
+                     :propObj="selectedElement.styles.decorations"
                      :key="selectedElement"
                      icon="format_color_fill">
             </sm-prop>
@@ -54,7 +59,7 @@
     import { mapActions, mapGetters } from 'vuex';
     import SmProp from './SmProp.vue'
     
-    export default{
+    export default {
         components : {
             SmProp
         },
@@ -64,21 +69,27 @@
                 'slideBlocks',
                 'draggedElement',
                 'selectedElement',
-                'activeElementStyles'
+                'activeElementStyles',
+                'currentSlide'
             ] ),
-            
             isFlex(){
-                return this.activeElementStyles.general['01_display'].value === 'flex'
+                return this.activeElementStyles.general[ '01_display' ].value === 'flex'
             },
-            
             isActive(){
                 return !!this.selectedElement
-            }
+            },
+            isCanvasSelected(){
+                return _.includes ( this.selectedElement.id, 'Canvas' )
+            },
+//            blocks(){
+//                return this.currentSlide.components
+//            },
         },
         
         methods : {
             ...mapActions ( [
                 'updateElementProps',
+                'removeElement'
             ] ),
             dataReceived( prop, event ){
                 const data = {
@@ -87,9 +98,13 @@
                     id       : this.selectedElement.id
                 };
                 this.updateElementProps ( data );
-            }
+            },
         },
-        
+//        watch   : {
+//            blocks : function ( event ) {
+//                console.log ( 'change in blocks', event );
+//            }
+//        }
     }
 
 </script>
@@ -103,12 +118,19 @@
         display:         flex;
         flex-direction:  row;
         justify-content: flex-start;
-        flex-wrap: wrap;
-        padding:0 12px;
+        flex-wrap:       wrap;
+        padding:         0 12px;
+        position:        relative;
     }
     
-    .md-chip{
-        margin-bottom:5px;
+    .delete-button {
+        position: absolute;
+        right:    0;
+        top:      -5px;
+    }
+    
+    .md-chip {
+        margin-bottom: 5px;
     }
 
 </style>

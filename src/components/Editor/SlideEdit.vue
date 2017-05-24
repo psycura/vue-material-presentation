@@ -1,23 +1,46 @@
 <template>
-    <div class="dropzone container " id="dropzone">
-        <div @click.self="selectCanvas"
-             :class="isSelected"
-             :style="canvasStyles"
-             id="canvas"
-             class="dropzone-canvas droppable">
-            <block v-for="block, index in slideBlocks"
-                   :component="block" :key="block.id">
-            </block>
+    <div class="slide-edit-wrapper">
+        <md-progress class="md-accent"
+                     v-if="!loaded"
+                     md-indeterminate>
+        </md-progress>
+        <div v-show="loaded"
+             class="dropzone container "
+             id="dropzone">
+            <div class="control">
+                <md-button class="md-icon-button">
+                    <md-icon>remove_red_eye</md-icon>
+                    <md-tooltip md-direction="top">Preview</md-tooltip>
+                </md-button>
+                <md-button class="md-icon-button" @click.native="toggleFullScreen">
+                    <md-icon>zoom_out_map</md-icon>
+                    <md-tooltip md-direction="top">Full screen</md-tooltip>
+                </md-button>
+                <md-button class="md-icon-button" @click.native="changeState(1)">
+                    <md-icon>undo</md-icon>
+                    <md-tooltip md-direction="top">Undo</md-tooltip>
+                </md-button>
+            </div>
+            
+            <div @click.self="selectCanvas"
+                 :class="isSelected"
+                 :style="canvasStyles"
+                 :id="canvas.id"
+                 class="dropzone-canvas droppable">
+                <block v-for="block, index in blocks" class="target-wrapper"
+                       :component="block" :key="block.id">
+                </block>
+            </div>
+            <md-snackbar :md-position="vertical + ' ' + horizontal" ref="snackbar" :md-duration="duration">
+                <span>{{innerMessage}}</span>
+            </md-snackbar>
+            <vodal :show="showImageManager"
+                   animation="zoom"
+                   @hide="toggleImageManager(false)"
+                   :width="850" :height="461" measure="px">
+                <image-manager></image-manager>
+            </vodal>
         </div>
-        <md-snackbar :md-position="vertical + ' ' + horizontal" ref="snackbar" :md-duration="duration">
-            <span>{{message}}</span>
-        </md-snackbar>
-        <vodal :show="showImageManager"
-               animation="zoom"
-               @hide="toggleImageManager(false)"
-               :width="850" :height="461" measure="px">
-            <image-manager></image-manager>
-        </vodal>
     </div>
 </template>
 
@@ -29,8 +52,9 @@
     import jquery_ui from 'jqueryui/'
     import * as dbActions from '../../actions/db';
     import * as storageActions from '../../actions/storage';
-    import ImageManager from './panels/StyleManager/ImageManager.vue'
-
+    import ImageManager from './panels/StyleManager/ImageManager.vue';
+    import draggable from 'vuedraggable';
+    
     import Vodal from 'vodal'
     
     export default {
@@ -38,28 +62,35 @@
             slide : DynamicSlide,
             block : DynamicBlock,
             Vodal,
-            ImageManager
+            ImageManager,
         },
+        props      : [ 'canvas' ],
         data () {
             return {
                 previewIsActive : false,
-                message         : '',
+                innerMessage    : '',
                 vertical        : 'bottom',
                 horizontal      : 'center',
                 duration        : 4000,
                 index           : null,
-                id              : null
+                id              : null,
+                styles          : null,
+                loaded          : false
             }
         },
         
         computed : {
             ...mapGetters ( [
-                'slideBlocks',
-                'canvasStyles',
                 'getElement',
                 'draggedElement',
                 'selectedElement',
-                'showImageManager'
+                'showImageManager',
+                'currentSlide',
+                'message',
+                'statesArray',
+                'stateIndex',
+                'prevState',
+                'currentSlideIndex'
             ] ),
             
             isSelected(){
@@ -74,6 +105,59 @@
                     return ''
                 }
             },
+            
+            blocks(){
+                return this.currentSlide.components
+            },
+            
+            canvasStyles(){
+                let slide     = this.currentSlide;
+                let stylesObj = this.styles || this.canvas.styles;
+                let styles    = {};
+                if ( slide ) {
+                    _.forEach ( stylesObj, ( value ) => {
+                        _.forIn ( value, ( item, itemKey ) => {
+                            let key = itemKey.substring ( 3 );
+                            switch ( item.type ) {
+                                case 'composite':
+                                    setStyleOptions ( item.options, key );
+                                    break;
+                                case 'stack':
+                                    _.forIn ( item.stack, ( subItem, index ) => {
+                                        if ( index > 0 ) {
+                                            styles[ key ] = styles[ key ] + ','
+                                        }
+                                        setStyleOptions ( subItem.options, key );
+                                    } );
+                                    break;
+                                default:
+                                    styles[ key ] = item.value + (item.units || '');
+                                    break;
+                            }
+                        } )
+                    } );
+                }
+                
+                return styles;
+                
+                function setStyleOptions ( obj, key ) {
+                    if ( (key === 'background' && obj[ '01_image' ].value) || (key !== 'background') ) {
+                        
+                        _.forIn ( obj, ( option, subKey ) => {
+                            if ( subKey === '05_size' ) {
+                                styles.backgroundSize = option.value
+                            } else {
+                                styles[ key ]
+                                    ?
+                                    styles[ key ] = styles[ key ] + option.value + (option.units || '') + ' '
+                                    :
+                                    styles[ key ] = option.value + (option.units || '') + ' ';
+                            }
+                            
+                        } );
+                    }
+                }
+            },
         },
         methods  : {
             ...mapActions ( [
@@ -84,7 +168,12 @@
                 'initCanvas',
                 'selectCanvas',
                 'toggleSubheader',
-                'toggleImageManager'
+                'toggleImageManager',
+                'setPresentationToEdit',
+                'setStateIndex',
+                'setSlideToEdit',
+                'updateSlideBlocks',
+                'setParent'
             ] ),
             
             checkDropAccess(){
@@ -114,12 +203,12 @@
             },
             
             open( message ) {
-                this.message = message;
+                this.innerMessage = message;
                 this.$refs.snackbar.open ();
             },
             
             initDroppable(){
-                $ ( '#canvas' ).droppable ( {
+                $ ( `#${this.canvas.id}` ).droppable ( {
                     over   : ( event, ui ) => {
                         $ ( event.toElement ).addClass ( 'highlight_drop' );
                     },
@@ -132,21 +221,93 @@
                         this.drop ( id, )
                     }
                 } );
-            }
+            },
             
-        },
-        mounted(){
-            this.initDroppable ()
+            initSortable(){
+                const canvasId = this.canvas.id;
+                $ ( `#${canvasId}` ).sortable ( {
+                    containment : "parent",
+                    tolerance: "pointer",
+                    stop        : ( event, ui ) => {
+                        let id    = event.target.id;
+                        let array = [];
+                        this.setParent ( id );
+                        $ ( event.toElement ).parent ().children ( '.component' )
+                        .map ( ( index, element ) => {
+                            array.push ( element.id )
+                        } );
+                        this.updateSlideBlocks ( array );
+                    }
+                } )
+            },
+            
+            toggleFullScreen(){
+                if ( !document.fullscreenElement &&    // alternative standard method
+                    !document.mozFullScreenElement && !document.webkitFullscreenElement ) {  // current working methods
+                    if ( document.documentElement.requestFullscreen ) {
+                        document.documentElement.requestFullscreen ();
+                    } else if ( document.documentElement.mozRequestFullScreen ) {
+                        document.documentElement.mozRequestFullScreen ();
+                    } else if ( document.documentElement.webkitRequestFullscreen ) {
+                        document.documentElement.webkitRequestFullscreen ( Element.ALLOW_KEYBOARD_INPUT );
+                    }
+                } else {
+                    if ( document.cancelFullScreen ) {
+                        document.cancelFullScreen ();
+                    } else if ( document.mozCancelFullScreen ) {
+                        document.mozCancelFullScreen ();
+                    } else if ( document.webkitCancelFullScreen ) {
+                        document.webkitCancelFullScreen ();
+                    }
+                }
+            },
+            
+            changeState( step ){
+                let currentSlideIndex = this.currentSlideIndex;
+                if ( this.stateIndex > 0 ) {
+                    let index = this.stateIndex - step;
+                    this.setStateIndex ( index );
+                    let presentationState = {
+                        presentation : this.statesArray[ index ],
+                        slideIndex   : currentSlideIndex
+                    };
+                    this.setPresentationToEdit ( presentationState );
+                }
+                
+            },
         },
         
-        created (){
-            this.initCanvas ()
+        updated(){
+            this.styles = this.canvas.styles
         },
+        
+        mounted(){
+            this.initDroppable ();
+            this.initSortable ();
+            setTimeout ( () => {
+                this.loaded = true
+            }, 375 )
+        },
+        watch : {
+            message : function () {
+                this.open ( this.message )
+            },
+//
+//            blocks : function ( event ) {
+//                console.log ( 'change in blocks', event );
+//            }
+        }
+        
     }
 
 </script>
 
 <style lang="scss" scoped>
+    .slide-edit-wrapper {
+        width:  100%;
+        height: 100%;
+    }
+    
     .dropzone {
         width:    100%;
         height:   100%;
@@ -158,10 +319,10 @@
         box-shadow: 0 5px 5px -3px rgba(0, 0, 0, .2), 0 8px 10px 1px rgba(0, 0, 0, .14), 0 3px 14px 2px rgba(0, 0, 0, .12);
     }
     
-    /* example styles */
     .container {
-        overflow: hidden;
-        padding:  55px;
+        overflow:    hidden;
+        padding:     55px;
+        padding-top: 0;
     }
     
     .block-wrapper {
@@ -176,6 +337,24 @@
         }
     }
     
+    .control {
+        display:         flex;
+        justify-content: center;
+        
+        .md-button {
+            border-radius: 0 !important;
+            
+            &:hover {
+                background: rgba(153, 153, 153, 0.2);
+            }
+            
+            .md-ink-ripple {
+                border-radius: 0 !important;
+            }
+        }
+        
+    }
+    
     .preview {
         opacity: 0.5;
     }
@@ -188,6 +367,19 @@
     .selected {
         outline:        1px dashed rgba(255, 87, 34, 0.8);
         outline-offset: 0;
+    }
+    
+    .target-wrapper {
+        cursor:              pointer;
+        transition:          all .4s cubic-bezier(.25, .8, .25, 1);
+        transition-property: box-shadow;
+        
+        &:hover {
+            z-index:        2;
+            outline:        1px dashed #3f51b5;
+            outline-offset: 0px;
+        }
+        
     }
 
 </style>

@@ -27,6 +27,7 @@
     import { mapActions, mapGetters } from 'vuex';
     import * as dbActions from './actions/db';
     import * as authActions from './actions/auth';
+    import * as storageActions from './actions/storage';
     
     export default {
         components : {
@@ -39,7 +40,8 @@
                 'isLoggedIn',
                 'message',
                 'messageIsVisible',
-                'presentationDemos'
+                'presentationDemos',
+                'userId'
             ] ),
             
         },
@@ -52,17 +54,26 @@
                 setUserStatus          : 'setUserStatus'
             } ),
             
+            async initApp(){
+//                await authActions.getCurrentUser ();
+                await dbActions.getDemos ();
+            }
+            
         },
         
         async created(){
-            await authActions.getCurrentUser ();
-            await dbActions.getDemos ();
-            await dbActions.getUserPresentations ();
-    
+            this.initApp ()
+//            await authActions.getCurrentUser ();
+//            await dbActions.getDemos ();
+//            await dbActions.getUserPresentations ();
+
+//          await dbActions.deleteAllUserImg ();
+        
         },
+        
         async updated(){
-            await dbActions.getUserPresentations ();
-            
+//            await dbActions.getUserPresentations ();
+//            await dbActions.getUserImgs ();
         }
         
     }
@@ -80,7 +91,6 @@
     @import "../node_modules/vodal/zoom.css";
     @import "../node_modules/jquery-ui/themes/base/all.css";
     @import "../node_modules/medium-editor/dist/css/medium-editor.min.css";
-    
     
     .animated {
         animation-duration: .377s;
@@ -106,6 +116,7 @@
         display:        flex;
         flex-direction: column;
         min-height:     0;
+        width:          100%;
         flex:           1;
         position:       relative;
         overflow:       auto;
@@ -123,53 +134,64 @@
     }
     
     .vodal-close {
-        top:   1px!important;
-        right: 1px!important;
+        top:   1px !important;
+        right: 1px !important;
     }
     
-    .md-tooltip{
-        z-index: 1000!important;
+    .md-tooltip {
+        z-index: 1000 !important;
     }
     
     .md-tabs {
-        .md-tabs-content{
+        .md-tabs-content {
             overflow-y: auto;
         }
         
-        .md-tabs-wrapper{
+        .md-tabs-wrapper {
             overflow-y: auto;
         }
     }
     
-    .medium-editor-toolbar-actions{
-        display: flex!important;
-        flex-direction: row!important;
-        align-items: baseline!important;
-        .medium-editor-action{
-            background: #ff5722!important;
-            color: rgba(255, 255, 255, .54)!important;
-            border: none!important;
-            &:hover{
-                color: rgba(255, 255, 255, .87)!important;
+    .medium-editor-toolbar-actions {
+        display:        flex !important;
+        flex-direction: row !important;
+        align-items:    baseline !important;
+        .medium-editor-action {
+            background: #ff5722 !important;
+            color:      rgba(255, 255, 255, .54) !important;
+            border:     none !important;
+            &:hover {
+                color: rgba(255, 255, 255, .87) !important;
             }
         }
     }
     
-    .medium-toolbar-arrow-under{
-        &:after{
-            transform: rotateZ(45deg)!important;
-            border-color: #ff5722!important;
-            bottom: -5px!important;
-            height: 13px!important;
+    .medium-toolbar-arrow-under {
+        &:after {
+            transform:    rotateZ(45deg) !important;
+            border-color: #ff5722 !important;
+            bottom:       -5px !important;
+            height:       13px !important;
         }
     }
     
-    .medium-editor-element{
-        &:focus{
-            outline: none!important;
+    .medium-editor-element {
+        &:focus {
+            outline: none !important;
         }
     }
-
+    
+    .md-theme-default.md-input-container .md-icon:not(.md-icon-delete):after {
+        background: none !important;
+    }
+    
+    .control {
+        
+        .md-button.md-icon-button .md-ink-ripple {
+            border-radius: 0 !important;
+            
+        }
+    }
     
 
 </style>

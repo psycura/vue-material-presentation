@@ -28,7 +28,7 @@
     import Slides from '../containers/Slides.vue';
     import SidebarWrapper from '../gui/SidebarWrapper.vue'
     
-    export default{
+    export default {
         components : {
             Vodal,
             Slides,
@@ -60,11 +60,9 @@
             ...mapActions ( [
                 'toggleSubheader'
             ] ),
-            openMessage( message ) {
-                if ( message ) {
-                    this.message = message;
-                    this.$refs.snackbar.open ();
-                }
+            openMessage() {
+                console.log(this.message);
+                this.$refs.snackbar.open ();
             },
             
             openPreview ()
@@ -99,6 +97,13 @@
                 }
             }
         },
+        
+        watch : {
+            message : function () {
+                this.openMessage ()
+            },
+            
+        }
         
     }
 

@@ -93,7 +93,7 @@ const listOptions = {
         { label : 'repeat-y', value : 'repeat-y' },
         { label : 'no-repeat', value : 'no-repeat' },
     ],
-    '03_position':[
+    '04_position':[
         { label : 'left top', value : 'left top' },
         { label : 'left center', value : 'left center' },
         { label : 'left bottom', value : 'left bottom' },
@@ -104,7 +104,7 @@ const listOptions = {
         { label : 'center center', value : 'center center' },
         { label : 'center bottom', value : 'center bottom' },
     ],
-    '04_attachment':[
+    '03_attachment':[
         { label : 'scroll', value : 'scroll' },
         { label : 'fixed', value : 'fixed' },
         { label : 'local', value : 'local' },

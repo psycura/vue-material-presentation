@@ -27,6 +27,7 @@
     import SmPropComposite from './SmPropComposite.vue'
     import SmPropRadio from './SmPropRadio.vue'
     import SmPropStack from './SmPropStack.vue'
+    import SmPropSlider from './SmPropSlider.vue'
     import { mapActions, mapGetters } from 'vuex';
     
     export default {
@@ -45,6 +46,7 @@
             smComposite : SmPropComposite,
             smRadio     : SmPropRadio,
             smStack     : SmPropStack,
+            smSlider    : SmPropSlider
         },
         
         methods : {
@@ -104,7 +106,7 @@
         min-height:     48px;
         padding:        0 16px;
         
-        &:hover{
+        &:hover {
             background: hsla(0, 0%, 60%, .2);
         }
         

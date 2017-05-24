@@ -1,9 +1,13 @@
 <template>
-    <div class="property-item composite">
+    <div class="property-item composite"
+         :class="isOpen && ' active'"
+         @click="toggleProp">
         <div class="prop-label">
             <span class="md-caption">{{propKey | trimPropKey | kebabCase}}</span>
+            <md-icon class="panel-head-arrow prop-arrow">keyboard_arrow_down</md-icon>
         </div>
-        <div class="field composite">
+        
+        <div class="field composite" v-show="isOpen">
             <div class="input-holder">
                 <div class="properties">
                     <component :is="`sm-${property.type}`" :prop="property"
@@ -24,6 +28,11 @@
     
     export default {
         props      : [ 'prop', 'propKey' ],
+        data(){
+            return {
+                isOpen : false
+            }
+        },
         components : {
             smSelect : SmPropSelect,
             smPicker : SmPropPicker,
@@ -31,6 +40,10 @@
         },
         
         methods : {
+            
+            toggleProp(){
+                this.isOpen = !this.isOpen
+            },
             
             emitSubData( eventData ){
                 const data = {
@@ -41,10 +54,8 @@
                 };
                 
                 this.$emit ( 'updateValue', data )
-                
             },
         },
-    
         
     }
 
@@ -120,9 +131,35 @@
     
     .property-item {
         width:         50%;
-        margin-bottom: 5px;
-        padding:       0 5px;
+        margin:        5px;
+        /*margin-bottom: 5px;*/
+        /*padding:       0 5px;*/
+        border:        1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 2px;
+        cursor:        pointer;
+        transition:    all .4s cubic-bezier(.25, .8, .25, 1);
         
+        &.active {
+            padding-bottom: 5px;
+            
+            .prop-arrow {
+                transform: rotate(180deg) translate3D(0, 0, 0);
+            }
+        }
+        
+    }
+    
+    .prop-label {
+        display:         flex;
+        justify-content: space-between;
+        align-items:     center;
+        padding:         0 6px;
+        
+        .md-icon {
+            transition: all .4s cubic-bezier(.25, .8, .25, 1);
+            
+            /*transform: rotate(180deg) translate3D(0, 0, 0);*/
+        }
     }
     
     .field-units {

@@ -5,31 +5,32 @@
         </div>
         <div class="field prop-stack">
             <md-button class="md-icon-button add-button md-dense"
-                       @click.native="addLayer(propKey)">
+                       @click.native="addPropLayer(propKey)">
                 <md-icon>add</md-icon>
             </md-button>
             <div class="input-holder">
             </div>
             <div class="field stack-layers">
                 <div class="stack-layer"
-                     :key="layer"
-                     v-for="layer,index in layers">
+                     :key="layer.id"
+                     v-for="layer,layerIndex in layers">
                     <div class="layer-move">
                         <i class="fa fa-arrows"></i>
                     </div>
-                    <div class="layer-label">Layer {{index + 1}}</div>
+                    <div class="layer-label">Layer {{layerIndex + 1}}</div>
                     <md-button class="md-icon-button layer-close md-dense"
-                               @click.native="removeLayer(index)">
+                               @click.native="removeLayer(layerIndex)">
                         <md-icon>close</md-icon>
                     </md-button>
                     <div class="layer-inputs">
                         <div class="properties ">
-                            <component :key="option"
+                            <component :key="`${layer.id}_${option}`"
                                        v-for="option,key in layer.options"
                                        :is="`sm-${option.type}`"
                                        :prop="option"
+                                       :layer="layerIndex"
                                        :propKey="key"
-                                       @updateValue="emitData(index,$event)">
+                                       @updateValue="emitData(layerIndex,$event)">
                             </component>
                         </div>
                     </div>
@@ -58,15 +59,16 @@
         data(){
             return {
                 showModal : false,
+                layers    : null
             }
         },
         computed   : {
             ...mapGetters ( [
                 'getPropStack'
             ] ),
-            layers(){
-                return this.prop.stack;
-            },
+//            layers(){
+//                return this.prop.stack;
+//            },
         },
         components : {
             smSelect    : SmPropSelect,
@@ -92,14 +94,29 @@
                 this.$emit ( 'updateValue', data )
             },
             
-            removeLayer( index ){
+            async addPropLayer( propKey ){
+                await this.addLayer ( propKey );
+                this.updateLayers ();
+            },
+            
+            async removeLayer( index ){
                 const layerData = {
                     propKey : this.propKey,
                     index
                 };
-                this.removePropLayer ( layerData );
+                await this.removePropLayer ( layerData );
+                this.updateLayers ();
+    
             },
+            
+            updateLayers(){
+                this.layers = this.prop.stack;
+            }
         },
+        
+        created(){
+            this.updateLayers ();
+        }
     }
 
 </script>

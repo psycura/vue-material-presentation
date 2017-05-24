@@ -9,7 +9,7 @@
                        @change="emitData( $event.target.value)"
                        v-model="prop.value">
             </div>
-            <div class="color-pick" @click="pickerHandler">
+            <div class="color-pick" @click.stop="pickerHandler">
                 <div class="cpick-color">
                     <div class="color-picker" :style="{backgroundColor:prop.value}"></div>
                 </div>
@@ -55,9 +55,11 @@
         methods    : {
             emitData( value ){
                 const data = {
-                    value,
-                    propKey : this.propKey
+                    propKey   : this.propKey,
+                    valueType : 'string',
+                    value
                 };
+                
                 this.$emit ( 'updateValue', data )
             },
             
@@ -74,15 +76,13 @@
             
             onColorChange( value ){
                 if ( this.colorProp ) {
-                    this.emitData ( value.hex );
+                    let data   = _.flatMap ( value.rgba ).join(',');
+                    let result = `rgba(${data})`;
+                    this.emitData ( result );
                 }
                 
             },
         },
-        
-        created(){
-            console.log ( 'picker ', this.propKey );
-        }
     }
 
 </script>
@@ -184,7 +184,7 @@
                 transform: translate3d(-103px, 5px, 0px) !important;
                 width:     209% !important;
                 
-                &.left{
+                &.left {
                     transform: translate3d(0px, 5px, 0px) !important;
                 }
             }

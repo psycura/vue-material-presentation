@@ -153,13 +153,13 @@
             async onClose( type ) {
                 if ( type === 'ok' ) {
                     this.deletePresentation ( this.key );
-                    this.$parent.openMessage ( 'The Item was deleted' )
+                    this.setMessage ( 'The Item was deleted' )
                 }
             },
             
             savePresentations(){
                 dbActions.updateUserPresentations ( this.userPresentations );
-                this.$parent.openMessage ( 'Collection saved successfully' )
+                this.setMessage ( 'Collection saved successfully' )
             },
             
             scrollHandler( title ){

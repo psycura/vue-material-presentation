@@ -18,7 +18,6 @@ export function signInWithPassword ( email, password ) {
         } )
     } )
 }
-
 export function signUpWithPassword ( email, password, name ) {
     return new Promise ( ( resolve, reject ) => {
         auth.createUserWithEmailAndPassword ( email, password )
@@ -42,7 +41,6 @@ export function signUpWithPassword ( email, password, name ) {
         } )
     } )
 }
-
 export function signOut () {
     return new Promise ( ( resolve ) => {
         auth.signOut ()
@@ -51,21 +49,19 @@ export function signOut () {
         } )
     } )
 }
-
 export function getCurrentUser () {
-    return auth.currentUser;
+    const user = auth.currentUser;
+    return user
 }
-
 auth.onAuthStateChanged ( ( user ) => {
     console.log ( 'onAuthStateChanged' );
-    
     if ( user ) {
         dbActions.updateUserStatus ( user )
     } else {
         dbActions.updateUserStatus ()
+        
     }
 } );
-
 function writeUserData ( user ) {
     dbRef.ref ( 'users/' + user.uid ).set ( {
         name    : user.displayName,

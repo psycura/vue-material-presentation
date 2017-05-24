@@ -7,23 +7,24 @@
             <span>{{message}}</span>
         </md-snackbar>
     </md-tabs>
-   
+
 </template>
 
 <script>
     import StyleManager from './StyleManager/StyleManager.vue'
     import Blocks from './Blocks.vue'
     import ComponentSettings from './ComponentSettings.vue'
+    import { mapActions, mapGetters } from 'vuex';
     
-    export default{
+    export default {
         data(){
             return {
                 message    : '',
                 vertical   : 'bottom',
                 horizontal : 'center',
                 duration   : 4000,
-                id      : 'options',
-                buttons : [
+                id         : 'options',
+                buttons    : [
                     'open-style-manager',
                     'open-component-settings',
                     'open-layer-manager',
@@ -31,13 +32,24 @@
                 ],
             }
         },
-        methods:{
+        methods  : {
             open( message ) {
                 if ( message ) {
                     this.message = message;
                     this.$refs.snackbar.open ();
                 }
             },
+        },
+        computed : {
+            ...mapGetters ( [
+                'slideBlocks',
+                'draggedElement',
+                'selectedElement',
+                'activeElementStyles',
+                'currentSlide'
+            ] ),
+            
+   
         },
         
         components : {
@@ -50,6 +62,5 @@
 </script>
 
 <style lang="scss" scoped>
-
 
 </style>

@@ -136,6 +136,11 @@ const components = {
                 },
             },
             decorations : {
+                '00_opacity'         : {
+                    value    : 1,
+                    type     : 'slider',
+                    editable : true
+                },
                 '01_color'           : {
                     value    : '#000',
                     type     : 'picker',
@@ -356,6 +361,11 @@ const components = {
                 },
             },
             decorations : {
+                '00_opacity'         : {
+                    value    : 1,
+                    type     : 'slider',
+                    editable : true
+                },
                 '01_color'           : {
                     value    : '#000',
                     type     : 'picker',
@@ -577,6 +587,11 @@ const components = {
                 },
             },
             decorations : {
+                '00_opacity'         : {
+                    value    : 1,
+                    type     : 'slider',
+                    editable : true
+                },
                 '01_color'           : {
                     value    : '#000',
                     type     : 'picker',
@@ -798,6 +813,11 @@ const components = {
                 },
             },
             decorations : {
+                '00_opacity'         : {
+                    value    : 1,
+                    type     : 'slider',
+                    editable : true
+                },
                 '02_backgroundColor' : {
                     value    : 'transparent',
                     type     : 'picker',

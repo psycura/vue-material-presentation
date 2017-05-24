@@ -13,17 +13,32 @@
             <div class="assets-control">
                 <div class="assets-header">
                     <md-input-container>
-                        <md-file v-model="image" placeholder="Here can be your image"
+                        <md-file v-model="image"
+                                 accept="image/*"
+                                 placeholder="Here can be your image"
                                  @change.native="upload($event)"></md-file>
                     </md-input-container>
+                    <md-progress :md-progress="imageUploadProgress"
+                                 v-if="uploadInProgress">
+                    </md-progress>
                 </div>
                 <div class="assets">
-                    <div class="asset asset-image">
+                    <div class="asset asset-image"
+                         @click="selectImage(img)"
+                         v-for="img,index in userImgs"
+                         :key="`${index}_${img.name}`">
                         <div class="preview-cont">
-                            <div class="preview"></div>
-                            <div class="preview-bg"></div>
+                            <div class="preview" :style="{backgroundImage: `url(${img.url})`}"></div>
                         </div>
-                        <div class="meta"></div>
+                        <div class="meta">
+                            <div class="meta-name">
+                                {{img.name}}
+                            </div>
+                        </div>
+                        <md-button class="md-icon-button layer-close md-dense"
+                                   @click.native.stop="removeImage(img.name,index)">
+                            <md-icon>close</md-icon>
+                        </md-button>
                     </div>
                 </div>
             </div>
@@ -44,13 +59,36 @@
                 initialValue : 'my-profile-picture.jpg',
                 multiple     : null,
                 onlyImages   : null,
-                image        : null
+                image        : null,
             }
         },
-        methods : {
-            upload( event ){
-//              console.log(event.target.files[0]);
-                storageActions.uploadFile ( event.target.files[ 0 ] )
+        computed : {
+            ...mapGetters ( [
+                'imageUploadProgress',
+                'uploadInProgress',
+                'userImgs',
+                'selectedImg',
+                'selectedImgIndex'
+            ] )
+        },
+        methods  : {
+            ...mapActions ( [
+                'selectImg',
+                'toggleImageManager'
+            ] ),
+            
+            async upload( event ){
+                await storageActions.uploadFile ( event.target.files[ 0 ] )
+            },
+            
+            async selectImage( img ){
+                await this.selectImg ( img.url );
+                this.toggleImageManager ( false );
+            },
+            
+            async removeImage( name, index ){
+                await storageActions.deleteImg ( name );
+                await dbActions.deleteUserImg ( index );
             }
         },
     }
@@ -120,10 +158,8 @@
         padding:          5px;
         margin:           0 -10px;
         overflow:         auto;
-        
-        .md-input-container {
-        
-        }
+        display:          flex;
+        flex-wrap:        wrap;
     }
     
     .asset {
@@ -131,6 +167,8 @@
         padding:       5px;
         cursor:        pointer;
         position:      relative;
+        display:       flex;
+        flex-wrap:     wrap;
     }
     
     .asset-image {
@@ -138,7 +176,10 @@
         width:         20%;
         height:        150px;
         border-radius: 3px;
-        overflow:      hidden;
+        
+        &:hover {
+            background-color: rgba(255, 255, 255, .2);
+        }
     }
     
     .preview-cont {
@@ -146,13 +187,13 @@
         width:  100%;
         
         .preview {
-            position:            absolute;
             background-position: center center;
             background-size:     cover;
             background-repeat:   no-repeat;
             height:              100%;
             width:               100%;
             z-index:             1;
+            overflow:            hidden;
         }
         
         .preview-bg {
@@ -167,7 +208,16 @@
     .meta {
         width:     100%;
         font-size: 12px;
-        padding:   5px 0 0 5px;
+        /*padding:   5px 0 0 5px;*/
+        height:    37px;
+        overflow:  hidden;
+    }
+    
+    .layer-close {
+        position: absolute !important;
+        right:    -6px;
+        top:      -1px;
+        opacity:  .75;
     }
 
 </style>
