@@ -3,8 +3,8 @@
         <component :style="elementStyles"
                    class="target-wrapper resizable component"
                    :class="isSelected"
-                   v-resize="resizeHandler"
                    :id="component.id"
+                   :component="component"
                    :is="component.name">
             <keep-alive>
                 <dynamic-block v-for="child, childIndex in component.children"
@@ -20,14 +20,21 @@
     import { mapActions, mapGetters } from 'vuex';
     import { componentsList } from './componentsList';
     
-    import resize from 'vue-resize-directive'
     import $ from 'jquery'
     import jquery_ui from 'jqueryui/'
     
     export default {
         name       : 'DynamicBlock',
-        props      : [ 'component' ],
-        data(){
+        props      : {
+            component   : {
+                type : Object
+            },
+            scaleFactor : {
+                type    : Number,
+                default : 1
+            }
+        },
+        data () {
             return {
                 message    : '',
                 vertical   : 'bottom',
@@ -38,25 +45,22 @@
         components : {
             List              : componentsList.List,
             Container         : componentsList.Container,
+            RoundContainer    : componentsList.RoundContainer,
             ListItemContainer : componentsList.ListItemContainer,
-            TextField         : componentsList.TextField
-        },
-        directives : {
-            resize,
+            TextField         : componentsList.TextField,
         },
         computed   : {
             ...mapGetters ( [
                 'selectedElement',
                 'draggedElement',
                 'dragIsActive',
-                'getElement'
+                'getElement',
+                'getCanvas'
             ] ),
-            
-            childrenLength(){
+            childrenLength () {
                 return _.size ( this.component.children )
             },
-            
-            isSelected(){
+            isSelected () {
                 if ( this.selectedElement ) {
                     if ( this.selectedElement.id === this.component.id ) {
                         return ' selected'
@@ -68,13 +72,12 @@
                     return ''
                 }
             },
-            
-            componentStyles(){
+            componentStyles () {
                 return this.component.styles
             },
-            
-            elementStyles(){
+            elementStyles () {
                 let styles = {};
+                let scale  = this.scaleFactor;
                 _.forEach ( this.componentStyles, ( value ) => {
                     _.forIn ( value, ( item, itemKey ) => {
                         let key = itemKey.substring ( 3 );
@@ -91,7 +94,11 @@
                                 } );
                                 break;
                             default:
-                                styles[ key ] = item.value + (item.units || '');
+                                let itemValue = item.value;
+                                if ( item.units === 'px' ) {
+                                    itemValue = item.value * scale
+                                }
+                                styles[ key ] = itemValue + (item.units || '');
                                 break;
                         }
                     } )
@@ -105,16 +112,24 @@
                             if ( subKey === '05_size' ) {
                                 styles.backgroundSize = option.value
                             } else {
+                                
+                                let optionValue = option.value;
+                                if ( option.units === 'px' ) {
+                                    optionValue = option.value * scale
+                                }
                                 styles[ key ]
                                     ?
-                                    styles[ key ] = styles[ key ] + option.value + (option.units || '') + ' '
+                                    styles[ key ] = styles[ key ] + optionValue + (option.units || '') + ' '
                                     :
-                                    styles[ key ] = option.value + (option.units || '') + ' ';
+                                    styles[ key ] = optionValue + (option.units || '') + ' ';
                             }
                         } );
                     }
                 }
             },
+            elementPositionStyle () {
+                return this.component.styles.general[ '02_position' ].value
+            }
         },
         
         methods : {
@@ -127,78 +142,106 @@
                 'setMessage'
             ] ),
             
-            checkDropAccess( id ){
-                let res          = true;
-                const block      = this.getElement ( id );
-                const draggedEl  = this.draggedElement;
-                const name       = draggedEl.name;
-                const targetName = block.name;
-                
-                if ( draggedEl.dropTarget !== '*' ) {
-                    _.forEach ( draggedEl.dropTarget, ( value ) => {
-                        if ( value === targetName ) {
-                            res = true;
-                            return
-                        } else {
-                            res = false
-                        }
-                    } );
+            checkDropAccess ( id ) {
+                let res         = true;
+                const block     = this.getElement ( id );
+                const draggedEl = this.draggedElement;
+                if ( draggedEl ) {
+                    const name       = draggedEl.name;
+                    const targetName = block.name;
+                    
+                    if ( draggedEl.dropTarget !== '*' ) {
+                        _.forEach ( draggedEl.dropTarget, ( value ) => {
+                            if ( value === targetName ) {
+                                res = true;
+                                return
+                            } else {
+                                res = false
+                            }
+                        } );
+                        return res;
+                    }
+                    if ( block.accept !== '*' ) {
+                        _.forEach ( block.accept, ( value ) => {
+                            if ( value === name ) {
+                                res = true;
+                                return
+                            } else {
+                                res = false
+                            }
+                        } );
+                    }
                     return res;
                 }
-                if ( block.accept !== '*' ) {
-                    _.forEach ( block.accept, ( value ) => {
-                        if ( value === name ) {
-                            res = true;
-                            return
-                        } else {
-                            res = false
-                        }
-                    } );
-                }
-                return res;
+                
             },
-            
-            async drop( id ) {
+            async drop ( id ) {
                 if ( this.checkDropAccess ( id ) ) {
                     await this.addNewElement ( id );
                 } else {
                     const message = 'This element can`t be here';
-//                    this.$parent.open ( message );
                     this.setMessage ( message );
                 }
                 this.dropAction ();
             },
-            
-            initDroppable(){
+            initDroppable () {
                 const id = this.component.id;
                 $ ( `#${id}` ).droppable ( {
-                    over   : ( event, ui ) => {
+                    over   : ( event ) => {
                         $ ( event.toElement ).addClass ( 'highlight_drop' );
                     },
                     greedy : true,
-                    out    : ( event, ui ) => {
+                    out    : ( event ) => {
                         $ ( event.target ).removeClass ( 'highlight_drop' );
                     },
-                    drop   : ( event, ui ) => {
-                        this.drop ( id )
+                    drop   : () => {
+                        if ( id && this.dragIsActive ) {
+                            this.drop ( id )
+                        }
                     }
                 } );
             },
-    
-            initSortable(){
+            initDraggable () {
+                if ( this.elementPositionStyle === 'absolute' ) {
+                    const id = this.component.id;
+                    $ ( `#${id}` ).draggable ( {
+                        containment : "parent",
+                        stack       : '.component',
+                        stop        : ( event, ui ) => {
+                            if ( !this.dragIsActive ) {
+                                let data     = {
+                                    id       : id,
+                                    mainProp : "general",
+                                    units    : "px",
+                                };
+                                data.propKey = '03_top';
+                                data.value   = ui.position.top.toString ();
+                                this.updateElementProps ( data );
+                                
+                                data.propKey = '06_left';
+                                data.value   = ui.position.left.toString ();
+                                this.updateElementProps ( data );
+                            }
+                        }
+                    } );
+                }
+            },
+            initResizable () {
                 const id = this.component.id;
-    
-                $ ( `#${id}` ).sortable ( {
-                    sort : ( event, ui ) => {
-                        console.log ( 'sort', event, ui );
-                    }
+                
+                $ ( `#${id}` ).resizable ( {
+                    containment : "parent",
+                    stop        : ( event, ui ) => {
+                        if ( !this.dragIsActive ) {
+                            this.resizeHandler ( ui.element )
+                        }
+                    },
                 } )
             },
-            
-            resizeHandler( data ){
-                let id         = data.id;
-                let width      = data.style.width;
-                let height     = data.style.height;
+            resizeHandler ( data ) {
+                let id         = data[ 0 ].id;
+                let width      = data[ 0 ].style.width;
+                let height     = data[ 0 ].style.height;
                 let dataWidth  = {
                     value    : width,
                     propKey  : '01_width',
@@ -219,10 +262,11 @@
             
         },
         
-        mounted(){
+        mounted () {
             if ( this.component.container ) {
                 this.initDroppable ();
-//                this.initSortable ();
+                this.initDraggable ();
+                this.initResizable ();
             }
             const id = this.component.id;
             $ ( `#${id}` ).resizable ( {
@@ -230,30 +274,39 @@
                 containment : "parent"
             } );
         },
+        watch : {
+            elementPositionStyle : function ( event ) {
+                const id = this.component.id;
+                if ( event === 'absolute' ) {
+                    this.initDraggable ();
+                    $ ( `#${id}` ).draggable ( "enable" );
+                } else {
+                    $ ( `#${id}` ).draggable ( "disable" );
+                    let data     = {
+                        id       : id,
+                        mainProp : "general",
+                        units    : "px",
+                    };
+                    data.propKey = '03_top';
+                    data.value   = '0';
+                    this.updateElementProps ( data );
 
-//        watch : {
-//            componentStyles : function ( event ) {
-//                console.log ( 'componentStyles changed' );
-//            }
-//        }
+                    data.propKey = '06_left';
+                    data.value   = '0';
+                    this.updateElementProps ( data );
+                }
+            },
+            elementStyles        : function ( event ) {
+//                console.log ( 'style changed', event );
+            }
+        },
+
         
     }
 
 </script>
 
 <style lang="scss" scoped>
-    /*.target-wrapper {*/
-        /*cursor:              pointer;*/
-        /*transition:          all .4s cubic-bezier(.25, .8, .25, 1);*/
-        /*transition-property: box-shadow;*/
-        /**/
-        /*&:hover {*/
-            /*z-index:        2;*/
-            /*outline:        1px dashed #3f51b5;*/
-            /*outline-offset: 0px;*/
-        /*}*/
-        /**/
-    /*}*/
     
     .selected {
         outline:        1px dashed rgba(255, 87, 34, 0.8);

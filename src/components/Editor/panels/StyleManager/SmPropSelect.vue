@@ -1,13 +1,14 @@
 <template>
     <div class="property-item">
         <div class="prop-label">
-            <span class="md-caption">{{propKey | trimPropKey |  kebabCase}}</span>
+            <span class="md-caption">{{propKey | trimPropKey | kebabCase}}</span>
         </div>
         <div class="field">
             <div class="input-holder">
                 <select name="display" id="display"
                         @change="emitData($event.target.value)"
                         v-model="prop.value"
+                        :disabled="!prop.editable"
                         class="field-select">
                     <option v-for="option in options" :value="option.value"
                             :key="option.value">
@@ -25,15 +26,15 @@
 <script>
     import { listOptions } from '../../blocks/styleOptions'
     
-    export default{
+    export default {
         props    : [ 'prop', 'propKey' ],
         computed : {
-            options(){
+            options () {
                 return listOptions[ this.propKey ]
             },
         },
         methods  : {
-            emitData( value ){
+            emitData ( value ) {
                 const data = {
                     value,
                     propKey : this.propKey

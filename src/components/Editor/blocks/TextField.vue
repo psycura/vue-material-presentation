@@ -1,6 +1,6 @@
 <template>
     <div @click="selectActiveElement" :id="id">
-        <medium-editor :text='getInnerText(id)' :options='options' @edit='applyTextEdit' custom-tag='div'>
+        <medium-editor :text='getInnerText(id)' :options='options' @edit='applyTextEdit'>
         </medium-editor>
     </div>
 </template>
@@ -20,7 +20,7 @@
         components : {
             'medium-editor' : editor
         },
-        data(){
+        data () {
             return {
                 text    : '',
                 options : {
@@ -51,7 +51,7 @@
             }
         },
         
-        created(){
+        created () {
         }
         
     }

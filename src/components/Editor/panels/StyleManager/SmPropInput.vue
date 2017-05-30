@@ -7,11 +7,13 @@
         <span class="input-holder">
             <input v-model="value"
                    @change="emitData"
+                   :disabled="!prop.editable"
                    class="field-select">
         </span>
             <span class="field-units">
             <select name="units" class="input-unit"
                     @change="emitData"
+                    :disabled="!prop.editable"
                     v-model="units">
                <option>px</option>
                <option>%</option>
@@ -33,16 +35,21 @@
     import $ from 'jquery'
     
     export default {
-        data(){
+        data () {
             return {
                 units   : this.prop.units,
                 value   : this.prop.value,
                 pressed : false
             }
         },
-        props   : [ 'prop', 'propKey' ],
-        methods : {
-            emitData(){
+        computed : {
+            propValue () {
+                return this.prop.value
+            }
+        },
+        props    : [ 'prop', 'propKey' ],
+        methods  : {
+            emitData () {
                 const data = {
                     value   : this.value,
                     propKey : this.propKey,
@@ -51,7 +58,7 @@
                 this.$emit ( 'updateValue', data )
             },
             
-            mouseDownHandler(){
+            mouseDownHandler () {
                 let event    = window.event;
                 let mousePos = event.clientY;
                 
@@ -70,17 +77,26 @@
                 
             },
             
-            mouseUpHandler(){
+            mouseUpHandler () {
                 this.pressed = false;
                 $ ( '.md-content' ).unbind ()
             },
             
-            changeValue( val ){
-                const newVal = _.parseInt ( this.value ) + val;
-                this.value   = newVal.toString ();
-                this.emitData ();
+            changeValue ( val ) {
+                if ( this.prop.editable ) {
+                    const newVal = _.parseInt ( this.value ) + val;
+                    this.value   = newVal.toString ();
+                    this.emitData ();
+                }
+                
             },
             
+        },
+        
+        watch : {
+            propValue : function ( event ) {
+                this.value = event
+            }
         }
     }
 

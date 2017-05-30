@@ -2,14 +2,11 @@ const listOptions = {
     '01_display'        : [
         { label : 'Block', value : 'block' },
         { label : 'Flex', value : 'flex' },
-        { label : 'Inline', value : 'inline' },
-        { label : 'Inline-block', value : 'inline-block' },
         { label : 'None', value : 'none' },
     ],
     '02_position'       : [
         { label : 'Relative', value : 'relative' },
         { label : 'Absolute', value : 'absolute' },
-        { label : 'Fixed', value : 'fixed' },
     ],
     '42_borderStyle'    : [
         { label : 'Solid', value : 'solid' },

@@ -23,28 +23,29 @@ function getObj ( obj, id ) {
 }
 
 const state = {
-    presentation     : {},
-    presentations    : null,
-    id               : null,
-    currentSlide     : null,
-    draggedElement   : null,
-    dragIsActive     : false,
-    selectedElement  : null,
-    propPanelsState  : {
+    presentation         : {},
+    presentations        : null,
+    id                   : null,
+    currentSlide         : null,
+    draggedElement       : null,
+    dragIsActive         : false,
+    selectedElement      : null,
+    propPanelsState      : {
         'General'     : true,
         'Dimensions'  : false,
         'Decorations' : false,
         'Flex'        : false,
         'Typography'  : false
     },
-    currentParent    : null,
-    selectedImg      : null,
-    selectedImgIndex : null,
+    currentParent        : null,
+    selectedImg          : null,
+    selectedImgIndex     : null,
+    slidePreviewIsActive : false
     
 };
 
 const mutations = {
-    'ADD_SLIDE'( state, slide ){
+    'ADD_SLIDE' ( state, slide ) {
         slide.id         = state.presentation.slides.length + 1;
         slide.components = [];
         let id           = shortid.generate ();
@@ -55,7 +56,7 @@ const mutations = {
         };
         state.presentation.slides.push ( slide );
     },
-    'SET_PRESENTATION'( state, presentation ){
+    'SET_PRESENTATION' ( state, presentation ) {
         let index               = 0;
         let currentPresentation = null;
         if ( presentation.slideIndex >= 0 ) {
@@ -69,20 +70,20 @@ const mutations = {
         state.presentation.slides = slidesArray;
         state.currentSlide        = state.presentation.slides[ 0 ];
     },
-    'REMOVE_SLIDE'( state, index ){
+    'REMOVE_SLIDE' ( state, index ) {
         state.presentation.slides.splice ( index, 1 );
         state.selectedElement = null;
     },
-    'UPDATE_SLIDES'( state, slides ){
-        state.presentation = { ...state.presentation, slides : slides }
+    'UPDATE_SLIDES' ( state, slides ) {
+        // state.presentation = { ...state.presentation, slides : slides }
+        Vue.set ( state.presentation, 'slides', slides )
     },
-    'SET_SLIDE_TO_EDIT'( state, slide ){
+    'SET_SLIDE_TO_EDIT' ( state, slide ) {
         state.currentSlide            = slide;
         state.currentSlide.components = _.flatMap ( slide.components );
         state.selectedElement         = state.currentSlide.canvas;
     },
-    'UPDATE_SLIDE_BLOCKS'( state, blocks ){
-        console.log ( state.currentParent.id );
+    'UPDATE_SLIDE_BLOCKS' ( state, blocks ) {
         let newArray = [];
         let path     = null;
         let attr     = null;
@@ -96,16 +97,13 @@ const mutations = {
         _.forIn ( blocks, ( block ) => {
             newArray.push ( getObj ( state.currentSlide.components, block ) )
         } );
-        // path = { ...path, [attr] : newArray };
         Vue.set ( path, attr, newArray );
-        console.log ( attr, path[ attr ] );
-        // state.currentSlide.components = blocks;
     },
-    'START_DRAG_ACTION'( state, element ){
+    'START_DRAG_ACTION' ( state, element ) {
         state.draggedElement = _.cloneDeep ( components[ element ] );
         state.dragIsActive   = true;
     },
-    'ADD_NEW_ELEMENT'( state, containerId ){
+    'ADD_NEW_ELEMENT' ( state, containerId ) {
         let id     = shortid.generate ();
         let target = null;
         
@@ -135,13 +133,14 @@ const mutations = {
         state.dragIsActive    = false
         
     },
-    'INIT_CANVAS'( state ){
-        state.currentSlide.canvas = {
-            ...state.currentSlide.canvas,
-            styles : _.cloneDeep ( canvas.defaultStyles )
-        }
+    'INIT_CANVAS' ( state ) {
+        // state.currentSlide.canvas = {
+        //     ...state.currentSlide.canvas,
+        //     styles : _.cloneDeep ( canvas.defaultStyles )
+        // };
+        Vue.set(state.currentSlide.canvas, 'styles' , _.cloneDeep ( canvas.defaultStyles ))
     },
-    'REMOVE_ELEMENT'( state ){
+    'REMOVE_ELEMENT' ( state ) {
         let id      = state.selectedElement.parentId;
         let element = state.selectedElement;
         let parent  = null;
@@ -161,20 +160,19 @@ const mutations = {
         } );
         parent.splice ( index, 1 )
     },
-    'DROP_ACTION'( state ){
+    'DROP_ACTION' ( state ) {
         state.selectedElement = null;
         state.draggedElement  = null;
         state.dragIsActive    = false;
     },
-    'SELECT_ELEMENT'( state, blockId ){
+    'SELECT_ELEMENT' ( state, blockId ) {
         state.selectedElement = getObj ( state.currentSlide.components, blockId );
     },
-    'SELECT_CANVAS'( state ){
+    'SELECT_CANVAS' ( state ) {
         state.selectedElement = state.currentSlide.canvas;
     },
-    'UPDATE_ELEMENT_PROPS'( state, props ){
-        console.log ( 'UPDATE_ELEMENT_PROPS', props );
-        
+    'UPDATE_ELEMENT_PROPS' ( state, props ) {
+        // console.log ( 'UPDATE_ELEMENT_PROPS', props );
         let { value, units, id, mainProp, propKey, subKey, layerIndex } = props;
         
         let val       = null;
@@ -188,7 +186,7 @@ const mutations = {
         }
         
         if ( val === 'flex' && !block.styles.flex ) {
-            const flex   = {
+            const flex = {
                 flexDirection  : {
                     label : 'Flex-direction',
                     type  : 'select',
@@ -210,15 +208,17 @@ const mutations = {
                     value : 'center',
                 }
             };
-            block.styles = { ...block.styles, flex : flex }
+            Vue.set ( block.styles, 'flex', flex );
+            // block.styles = { ...block.styles, flex : flex }
         }
         
         if ( layerIndex >= 0 ) {
             if ( !block.styles[ mainProp ][ propKey ].stack[ layerIndex ].options[ value.propKey ] ) {
-                block.styles[ mainProp ][ propKey ].stack[ layerIndex ].options = {
-                    ...block.styles[ mainProp ][ propKey ].stack[ layerIndex ].options,
-                    [ value.propKey ] : ''
-                }
+                // block.styles[ mainProp ][ propKey ].stack[ layerIndex ].options = {
+                //     ...block.styles[ mainProp ][ propKey ].stack[ layerIndex ].options,
+                //     [ value.propKey ] : ''
+                // }
+                Vue.set ( block.styles[ mainProp ][ propKey ].stack[ layerIndex ].options, [ value.propKey ], '' )
             }
             valuePath = block.styles[ mainProp ][ propKey ].stack[ layerIndex ].options[ value.propKey ];
             units     = value.units;
@@ -226,18 +226,20 @@ const mutations = {
             
         } else if ( subKey ) {
             if ( !block.styles[ mainProp ][ propKey ].options[ subKey ] ) {
-                block.styles[ mainProp ][ propKey ].options = {
-                    ...block.styles[ mainProp ][ propKey ].options,
-                    [ subKey ] : ''
-                }
+                // block.styles[ mainProp ][ propKey ].options = {
+                //     ...block.styles[ mainProp ][ propKey ].options,
+                //     [ subKey ] : ''
+                // }
+                Vue.set ( block.styles[ mainProp ][ propKey ].options, [ subKey ], '' )
             }
             valuePath = block.styles[ mainProp ][ propKey ].options[ subKey ];
         } else {
             if ( !block.styles[ mainProp ][ propKey ] ) {
-                block.styles[ mainProp ] = {
-                    ...block.styles[ mainProp ],
-                    [ propKey ] : ''
-                }
+                // block.styles[ mainProp ] = {
+                //     ...block.styles[ mainProp ],
+                //     [ propKey ] : ''
+                // }
+                Vue.set ( block.styles[ mainProp ], [ propKey ], '' )
             }
             valuePath = block.styles[ mainProp ][ propKey ];
         }
@@ -249,14 +251,16 @@ const mutations = {
             
             val = value.match ( valuePattern ) ? value.match ( valuePattern )[ 0 ] : value;
         }
+        // console.log ( 'before', _.cloneDeep ( valuePath ) );
         Vue.set ( valuePath, 'value', val );
         Vue.set ( valuePath, 'units', units || '' );
+        // console.log ( 'after', valuePath );
         
     },
-    'TOGGLE_PROP_PANEL'( state, panel ){
+    'TOGGLE_PROP_PANEL' ( state, panel ) {
         state.propPanelsState[ panel ] = !state.propPanelsState[ panel ]
     },
-    'UPDATE_INNER_TEXT'( state, text ){
+    'UPDATE_INNER_TEXT' ( state, text ) {
         if ( state.selectedElement ) {
             if ( !state.selectedElement.text ) {
                 state.selectedElement = {
@@ -267,7 +271,7 @@ const mutations = {
             state.selectedElement.text = text;
         }
     },
-    'ADD_PROP_STACK_LAYER'( state, propKey ){
+    'ADD_PROP_STACK_LAYER' ( state, propKey ) {
         let id    = shortid.generate ();
         propKey   = propKey.substring ( 3 );
         let path  = null;
@@ -404,7 +408,7 @@ const mutations = {
         path.stack = stack;
         
     },
-    'REMOVE_PROP_STACK_LAYER'( state, layerData ){
+    'REMOVE_PROP_STACK_LAYER' ( state, layerData ) {
         let propKey = layerData.propKey.substring ( 3 );
         let path    = null;
         switch ( propKey ) {
@@ -423,28 +427,34 @@ const mutations = {
         path.stack = _.flatMap ( path.stack );
         path.stack.splice ( layerData.index, 1 );
     },
-    'REMOVE_IMG_BG'( state, layer ){
+    'REMOVE_IMG_BG' ( state, layer ) {
         state.selectedElement
             .styles.decorations[ '06_background' ]
             .stack[ layer ].options[ '01_image' ].value = '';
         
         state.selectedImg = null;
     },
-    'SELECT_IMG'( state, img ){
+    'SELECT_IMG' ( state, img ) {
         state.selectedImg = img;
     },
-    'TIME_TRAVEL'( state ){
+    'TIME_TRAVEL' ( state ) {
         let lastIndex          = _.size ( state.statesArray ) - 1;
         const newState         = state.statesArray [ lastIndex ];
         state[ newState.path ] = newState.value;
     },
-    'SET_PARENT'( state, parentId ){
-        console.log('SET_PARENT',parentId);
+    'SET_PARENT' ( state, parentId ) {
+        console.log ( 'SET_PARENT', parentId );
         if ( _.includes ( parentId, 'Canvas' ) ) {
             state.currentParent = state.currentSlide.canvas
         } else {
             state.currentParent = getObj ( state.currentSlide.components, parentId )
         }
+    },
+    'SET_DRAGGED_ELEMENT' ( state, id ) {
+        state.draggedElement = id ? getObj ( state.currentSlide.components, id ) : null;
+    },
+    'TOGGLE_SLIDE_PREVIEW' ( state, status ) {
+        state.slidePreviewIsActive = status
     }
     
 };
@@ -550,89 +560,49 @@ const actions = {
     },
     setParent             : ( { commit }, id ) => {
         commit ( 'SET_PARENT', id )
+    },
+    setDraggedElement     : ( { commit }, id ) => {
+        commit ( 'SET_DRAGGED_ELEMENT', id )
+    },
+    toggleSlidePreview    : ( { commit }, status ) => {
+        commit ( 'TOGGLE_SLIDE_PREVIEW', status )
     }
     
 };
 
 const getters = {
-    currentPresentation( state ){
+    currentPresentation ( state ) {
         return state.presentation;
     },
-    id( state ){
+    id ( state ) {
         return state.id;
     },
-    currentSlide( state ){
+    currentSlide ( state ) {
         return state.currentSlide
     },
-    dragIsActive( state ){
+    dragIsActive ( state ) {
         return state.dragIsActive;
     },
-    draggedElement( state ){
+    draggedElement ( state ) {
         return state.draggedElement;
     },
-    selectedElement( state ){
+    selectedElement ( state ) {
         return state.selectedElement;
     },
-    activeElementStyles( state ){
+    activeElementStyles ( state ) {
         if ( state.selectedElement ) {
             return state.selectedElement.styles
         }
     },
-    getCanvasStyles( state ){
+    getCanvasStyles ( state ) {
         if ( state.currentSlide ) {
             return state.currentSlide.canvas.styles
         }
-        /*let slide  = state.currentSlide;
-        let styles = {};
-        if ( slide ) {
-            _.forEach ( slide.canvas.styles, ( value ) => {
-                _.forIn ( value, ( item, itemKey ) => {
-                    let key = itemKey.substring ( 3 );
-                    switch ( item.type ) {
-                        case 'composite':
-                            setStyleOptions ( item.options, key );
-                            break;
-                        case 'stack':
-                            _.forIn ( item.stack, ( subItem, index ) => {
-                                if ( index > 0 ) {
-                                    styles[ key ] = styles[ key ] + ','
-                                }
-                                setStyleOptions ( subItem.options, key );
-                            } );
-                            break;
-                        default:
-                            styles[ key ] = item.value + (item.units || '');
-                            break;
-                    }
-                } )
-            } );
-        }
-        
-        console.log ( styles );
-        return styles;
-        
-        function setStyleOptions ( obj, key ) {
-            if ( (key === 'background' && obj[ '01_image' ].value) || (key !== 'background') ) {
-                
-                _.forIn ( obj, ( option, subKey ) => {
-                    if ( subKey === '05_size' ) {
-                        styles.backgroundSize = option.value
-                    } else {
-                        styles[ key ]
-                            ?
-                            styles[ key ] = styles[ key ] + option.value + (option.units || '') + ' '
-                            :
-                            styles[ key ] = option.value + (option.units || '') + ' ';
-                    }
-                    
-                } );
-            }
-        }*/
     },
     getElement   : state => id => {
         return getObj ( state.currentSlide.components, id )
     },
-    propPanelsState( state ){
+    propPanelsState ( state ) {
         return state.propPanelsState;
     },
     getInnerText : state => id => {
@@ -641,22 +611,25 @@ const getters = {
             return obj.text
         }
     },
-    getCanvas( state ){
+    getCanvas ( state ) {
         if ( state.currentSlide ) {
             return state.currentSlide.canvas
         }
     },
-    selectedImg( state ){
+    selectedImg ( state ) {
         return state.selectedImg
     },
-    selectedImgIndex( state ){
+    selectedImgIndex ( state ) {
         return state.selectedImgIndex
     },
-    currentSlideIndex( state ){
+    currentSlideIndex ( state ) {
         return _.indexOf ( state.presentation.slides, state.currentSlide )
     },
-    currentParent( state ){
+    currentParent ( state ) {
         return state.currentParent
+    },
+    slidePreviewIsActive ( state ) {
+        return state.slidePreviewIsActive
     }
 };
 

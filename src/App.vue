@@ -180,6 +180,10 @@
             outline: none !important;
         }
     }
+
+    .medium-editor-placeholder:after{
+        top: 10px!important;
+    }
     
     .md-theme-default.md-input-container .md-icon:not(.md-icon-delete):after {
         background: none !important;
@@ -192,7 +196,9 @@
             
         }
     }
-    
+    .ui-draggable{
+        z-index: 20!important;
+    }
 
 </style>
 

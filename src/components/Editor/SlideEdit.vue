@@ -8,7 +8,7 @@
              class="dropzone container "
              id="dropzone">
             <div class="control">
-                <md-button class="md-icon-button">
+                <md-button class="md-icon-button" @click.native="togglePreview(true)">
                     <md-icon>remove_red_eye</md-icon>
                     <md-tooltip md-direction="top">Preview</md-tooltip>
                 </md-button>
@@ -40,13 +40,18 @@
                    :width="850" :height="461" measure="px">
                 <image-manager></image-manager>
             </vodal>
+            <vodal :show="slidePreviewIsActive"
+                   @hide="togglePreview(false)"
+                   animation="zoom"
+                   :width="80" :height="99" measure="%">
+                <slide-preview :originSize="size"></slide-preview>
+            </vodal>
         </div>
     </div>
 </template>
 
 <script>
     import { mapActions, mapGetters } from 'vuex';
-    import DynamicSlide from '../DynamicSlide.vue';
     import DynamicBlock from './blocks/DynamicBlock.vue';
     import $ from 'jquery'
     import jquery_ui from 'jqueryui/'
@@ -54,15 +59,16 @@
     import * as storageActions from '../../actions/storage';
     import ImageManager from './panels/StyleManager/ImageManager.vue';
     import draggable from 'vuedraggable';
+    import SlidePreview from './SlidePreview.vue'
     
     import Vodal from 'vodal'
     
     export default {
         components : {
-            slide : DynamicSlide,
             block : DynamicBlock,
             Vodal,
             ImageManager,
+            SlidePreview
         },
         props      : [ 'canvas' ],
         data () {
@@ -75,7 +81,9 @@
                 index           : null,
                 id              : null,
                 styles          : null,
-                loaded          : false
+                loaded          : false,
+                showPreview     : false,
+                size            : null
             }
         },
         
@@ -90,10 +98,12 @@
                 'statesArray',
                 'stateIndex',
                 'prevState',
-                'currentSlideIndex'
+                'currentSlideIndex',
+                'dragIsActive',
+                'slidePreviewIsActive'
             ] ),
             
-            isSelected(){
+            isSelected () {
                 if ( this.selectedElement ) {
                     if ( this.selectedElement.id === 'canvas' ) {
                         return ' selected'
@@ -105,12 +115,10 @@
                     return ''
                 }
             },
-            
-            blocks(){
+            blocks () {
                 return this.currentSlide.components
             },
-            
-            canvasStyles(){
+            canvasStyles () {
                 let slide     = this.currentSlide;
                 let stylesObj = this.styles || this.canvas.styles;
                 let styles    = {};
@@ -137,7 +145,7 @@
                         } )
                     } );
                 }
-                
+//                console.log('canvas styles', styles);
                 return styles;
                 
                 function setStyleOptions ( obj, key ) {
@@ -173,14 +181,15 @@
                 'setStateIndex',
                 'setSlideToEdit',
                 'updateSlideBlocks',
-                'setParent'
+                'setParent',
+                'setDraggedElement',
+                'toggleSlidePreview'
             ] ),
             
-            checkDropAccess(){
+            checkDropAccess () {
                 let res          = true;
                 const draggedEl  = this.draggedElement;
                 const targetName = 'Canvas';
-                
                 if ( draggedEl.dropTarget !== '*' ) {
                     _.forEach ( draggedEl.dropTarget, ( value ) => {
                         if ( value === targetName ) {
@@ -191,8 +200,7 @@
                 }
                 return res;
             },
-            
-            async drop( id ) {
+            async drop ( id ) {
                 if ( this.checkDropAccess () ) {
                     await this.addNewElement ( id );
                 } else {
@@ -201,13 +209,11 @@
                 }
                 this.dropAction ();
             },
-            
-            open( message ) {
+            open ( message ) {
                 this.innerMessage = message;
                 this.$refs.snackbar.open ();
             },
-            
-            initDroppable(){
+            initDroppable () {
                 $ ( `#${this.canvas.id}` ).droppable ( {
                     over   : ( event, ui ) => {
                         $ ( event.toElement ).addClass ( 'highlight_drop' );
@@ -218,17 +224,22 @@
                     },
                     drop   : ( event, ui ) => {
                         const id = event.target.id;
-                        this.drop ( id, )
+                        if ( id && this.dragIsActive ) {
+                            this.drop ( id, )
+                        }
                     }
                 } );
             },
-            
-            initSortable(){
+            initSortable () {
                 const canvasId = this.canvas.id;
                 $ ( `#${canvasId}` ).sortable ( {
                     containment : "parent",
-                    tolerance: "pointer",
-                    stop        : ( event, ui ) => {
+                    tolerance   : "pointer",
+                    start       : ( event, ui ) => {
+                        const id = event.toElement.id;
+                        this.setDraggedElement ( id )
+                    },
+                    stop        : ( event ) => {
                         let id    = event.target.id;
                         let array = [];
                         this.setParent ( id );
@@ -237,11 +248,11 @@
                             array.push ( element.id )
                         } );
                         this.updateSlideBlocks ( array );
+                        this.setDraggedElement ( null )
                     }
                 } )
             },
-            
-            toggleFullScreen(){
+            toggleFullScreen () {
                 if ( !document.fullscreenElement &&    // alternative standard method
                     !document.mozFullScreenElement && !document.webkitFullscreenElement ) {  // current working methods
                     if ( document.documentElement.requestFullscreen ) {
@@ -261,8 +272,7 @@
                     }
                 }
             },
-            
-            changeState( step ){
+            changeState ( step ) {
                 let currentSlideIndex = this.currentSlideIndex;
                 if ( this.stateIndex > 0 ) {
                     let index = this.stateIndex - step;
@@ -275,13 +285,24 @@
                 }
                 
             },
+            togglePreview ( status ) {
+                if ( status ) {
+                    const id     = this.canvas.id;
+                    const canvas = $ ( `#${id}` );
+                    this.size    = {
+                        height : canvas[ 0 ].clientHeight,
+                        width  : canvas[ 0 ].clientWidth
+                    };
+                }
+                this.toggleSlidePreview ( status )
+            }
         },
         
-        updated(){
+        updated () {
             this.styles = this.canvas.styles
         },
         
-        mounted(){
+        mounted () {
             this.initDroppable ();
             this.initSortable ();
             setTimeout ( () => {
@@ -292,10 +313,10 @@
             message : function () {
                 this.open ( this.message )
             },
-//
-//            blocks : function ( event ) {
-//                console.log ( 'change in blocks', event );
-//            }
+    
+            blocks : function ( event ) {
+                console.log ( 'change in blocks', event );
+            }
         }
         
     }
@@ -309,14 +330,16 @@
     }
     
     .dropzone {
-        width:    100%;
-        height:   100%;
-        position: relative;
+        width:  100%;
+        height: 100%;
     }
     
     .dropzone-canvas {
         flex-wrap:  wrap;
         box-shadow: 0 5px 5px -3px rgba(0, 0, 0, .2), 0 8px 10px 1px rgba(0, 0, 0, .14), 0 3px 14px 2px rgba(0, 0, 0, .12);
+        position:   relative;
+        overflow:   hidden;
+        
     }
     
     .container {

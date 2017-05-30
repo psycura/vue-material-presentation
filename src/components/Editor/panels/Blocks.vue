@@ -105,6 +105,7 @@
             $ ( ".draggable" ).draggable ( {
                 helper   : "clone",
                 appendTo : ".editor",
+ 
                 start    : ( event, ui ) => {
                     const target = event.currentTarget.id;
                     this.startDragAction ( target );

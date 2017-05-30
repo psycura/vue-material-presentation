@@ -36,7 +36,8 @@
         ],
         computed   : {
             ...mapGetters ( [
-                'propPanelsState'
+                'propPanelsState',
+                'selectedElement'
             ] ),
         },
         components : {
@@ -53,11 +54,11 @@
             ...mapActions ( [
                 'togglePropPanel'
             ] ),
-            emitData( data ){
+            emitData ( data ) {
                 this.$emit ( 'updateValue', data )
             },
             
-        }
+        },
         
     }
 

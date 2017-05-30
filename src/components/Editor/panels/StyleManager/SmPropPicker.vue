@@ -21,8 +21,8 @@
                         move="moved"
                         appear
                         appear-active-class="animated zoomIn">
-                <chrome-picker v-model="prop.value"
-                               @change-color="onColorChange"
+                <chrome-picker :value="prop.value"
+                               @input="onColorChange"
                                @mousedown.native="colorProp=prop"
                                v-if="pickerIsOpen">
                 </chrome-picker>
@@ -36,7 +36,7 @@
     
     export default {
         props    : [ 'prop', 'propKey' ],
-        data(){
+        data () {
             return {
                 pickerIsOpen : false,
                 colorProp    : null,
@@ -44,7 +44,7 @@
             }
         },
         computed : {
-            isLeftPlaced(){
+            isLeftPlaced () {
                 return this.propKey === '05_color' ? ' left' : ''
             }
         },
@@ -53,7 +53,7 @@
             'chrome-picker' : colorPicker.Chrome,
         },
         methods    : {
-            emitData( value ){
+            emitData ( value ) {
                 const data = {
                     propKey   : this.propKey,
                     valueType : 'string',
@@ -63,7 +63,7 @@
                 this.$emit ( 'updateValue', data )
             },
             
-            pickerHandler(){
+            pickerHandler () {
                 this.pickerIsOpen = !this.pickerIsOpen;
                 if ( !this.pickerIsOpen ) {
                     setTimeout ( () => {
@@ -74,15 +74,16 @@
                 }
             },
             
-            onColorChange( value ){
+            onColorChange ( value ) {
                 if ( this.colorProp ) {
-                    let data   = _.flatMap ( value.rgba ).join(',');
+                    let data   = _.flatMap ( value.rgba ).join ( ',' );
                     let result = `rgba(${data})`;
                     this.emitData ( result );
                 }
                 
             },
         },
+        
     }
 
 </script>

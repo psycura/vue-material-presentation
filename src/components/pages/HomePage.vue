@@ -35,14 +35,21 @@
 
 <script>
     import PresentationDemos from '../containers/PresentationsDemos.vue'
+
     export default{
         components : {
             PresentationDemos
+        },
+        data(){
+            return {
+                text:'hello'
+            }
         },
         methods    : {
             navigateTo( url ){
                 this.$router.push ( url )
             },
+ 
             
         }
     }

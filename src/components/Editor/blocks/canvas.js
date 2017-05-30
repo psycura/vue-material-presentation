@@ -11,6 +11,12 @@ const canvas = {
                 type     : 'select',
                 editable : true
             },
+            '02_position' : {
+                value    : 'relative',
+                type     : 'select',
+                editable : false
+        
+            },
         },
         dimensions  : {
             '01_width'    : {
@@ -119,13 +125,13 @@ const canvas = {
             },
             '04_alignContent'   : {
                 type     : 'select',
-                value    : 'center',
+                value    : 'flex-start',
                 editable : true
                 
             },
             '05_flexWrap'       : {
                 type     : 'select',
-                value    : 'inherit',
+                value    : 'wrap',
                 editable : false
             }
         }
